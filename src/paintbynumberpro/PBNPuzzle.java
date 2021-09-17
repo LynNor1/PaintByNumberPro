@@ -326,7 +326,7 @@ public class PBNPuzzle {
     {
         if (myDrawHandler != null)
         {
-            myDrawHandler.DrawPuzzle (g, rect);
+            myDrawHandler.DrawPuzzle (g, rect, false);
             myDrawHandler.RedrawCluesComponents();
         }
     }

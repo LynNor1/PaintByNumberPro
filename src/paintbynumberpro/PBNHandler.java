@@ -581,7 +581,7 @@ public class PBNHandler implements Printable {
     }
 	
 	// Draw the contents of the puzzle panel
-	public void DrawPuzzle (Graphics g, Rectangle theRect)
+	public void DrawPuzzle (Graphics g, Rectangle theRect, boolean for_printing)
 	{	        
 		// recast Graphics to Graphics2D
 		if (g == null) g = GetCurrentGraphics ();
@@ -589,8 +589,11 @@ public class PBNHandler implements Printable {
 		g2D.setFont(GetCurrentFont ());
         
         myMessageWindow.AddMessage("PBNHandler->**DrawPuzzle()**");
-        Rectangle visRect = myPuzzleFrame.GetVisibleRect();
-        g.setClip (visRect.x, visRect.y, visRect.width, visRect.height);        
+		if (!for_printing)
+		{
+			Rectangle visRect = myPuzzleFrame.GetVisibleRect();
+			g.setClip (visRect.x, visRect.y, visRect.width, visRect.height);    
+		}
 		
 		Stroke bs1 = new BasicStroke(1);
 		Stroke bs2 = new BasicStroke(2);
@@ -1162,7 +1165,7 @@ public class PBNHandler implements Printable {
 		g2D.scale(scale, scale);
 
 		// Draw the puzzle
-		DrawPuzzle (g2D, null);
+		DrawPuzzle (g2D, null, true);
 
 		return PAGE_EXISTS;
 	}

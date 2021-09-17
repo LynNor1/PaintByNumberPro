@@ -97,7 +97,7 @@ public class PBNDrawPanel extends JPanel implements MouseListener,
 		super.paintComponent (g);
 		if (myPuzzle != null && myDrawHandler != null)
         {
-			myDrawHandler.DrawPuzzle (g, null);
+			myDrawHandler.DrawPuzzle (g, null, false);
             RedrawCluesComponents ();
         }
 	}
