@@ -497,7 +497,14 @@ public class PuzzleStaticUtilities {
 		{
 			try
 			{
-				myFile.createNewFile();
+				if (!myFile.createNewFile())
+				{
+					JOptionPane.showMessageDialog (null,
+							"Unable to create file: " + myFile.getName(),
+							"File Error",
+							JOptionPane.INFORMATION_MESSAGE, null);
+					return false;					
+				}
 			}
 			catch (IOException e)
 			{

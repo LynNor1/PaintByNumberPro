@@ -73,8 +73,9 @@ public class SavePuzzleThread extends Thread {
 //            System.out.println ("   SavePuzzleThread() running myDrawHandler mode: " + myDrawHandler.GetTheMode());
 //            System.out.println ("      auto_save_on: " + auto_save_on + " save_now: " + save_now);
             // Only do something if the mode is NORMAL
-            if (myDrawHandler.GetTheMode() == PBNHandler.Mode.NORMAL)
-            {
+			// 9/16/2021 - Saving is allowed for all modes NORMAL or AUTO-SOLVING
+//            if (myDrawHandler.GetTheMode() == PBNHandler.Mode.NORMAL)
+//            {
                 // Let's see if it's time to auto-save
                 if (auto_save_on)
                 {
@@ -92,9 +93,9 @@ public class SavePuzzleThread extends Thread {
                         File myFile = to_file;
                         if (myFile == null) myFile = thePuzzle.GetFile();
                         if (myFile != null)
-                        {
+                        {						
                             if (PuzzleStaticUtilities.WritePuzzleToFile(thePuzzle, myFile))
-                            {
+                            {									
                                 myDrawHandler.PuzzleSavedSuccessfullyToFile (myFile);
                                 if (!auto_save_on)
                                     JOptionPane.showMessageDialog (null,
@@ -102,7 +103,7 @@ public class SavePuzzleThread extends Thread {
                                             "Puzzle Saved!",
                                             JOptionPane.INFORMATION_MESSAGE, null);
                             } else
-                            {
+                            {									
                                 JOptionPane.showMessageDialog (null,
                                         "Error saving puzzle to file: " + myFile.getName(),
                                         "Puzzle NOT Saved",
@@ -128,7 +129,7 @@ public class SavePuzzleThread extends Thread {
                 // Sleep for 1/10th of a second
                 try { Thread.sleep(100); }
                 catch (InterruptedException ie) {}
-            }
+//            }
         }
     }
 
