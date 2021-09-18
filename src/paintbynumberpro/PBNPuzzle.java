@@ -5,8 +5,6 @@ import java.awt.*;
 import java.util.Stack;
 import javax.swing.JOptionPane;
 
-// Software Copyright 2010, Lynne Norikane
-//
 // Definitions:
 //  Empty square: X
 //  Filled square: F

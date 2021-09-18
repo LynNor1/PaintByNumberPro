@@ -1,7 +1,5 @@
 package paintbynumberpro;
 
-// Selection Software Copyright 2007, Lynne Norikane
-
 public class Selection extends Object {
 
 	private int selectedRow;

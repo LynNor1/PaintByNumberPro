@@ -8,8 +8,6 @@ import java.awt.Toolkit;
 import java.awt.event.*;
 import javax.swing.*;
 
-// PBNDrawPanel Software Copyright 2007, Lynne Norikane
-
 public class PBNDrawPanel extends JPanel implements MouseListener,
 													Scrollable,
 													KeyListener,

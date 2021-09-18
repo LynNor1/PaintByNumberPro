@@ -4,9 +4,7 @@ import java.awt.*;
 import java.awt.print.*;
 import java.io.File;
 import javax.swing.*;
-
-
-// Software Copyright 2012, Lynne Norikane
+import java.util.Calendar;
 
 public class PBNHandler implements Printable {
 
@@ -702,7 +700,8 @@ public class PBNHandler implements Printable {
         DrawFloatingClues (g);
 		
 		// Draw the Copyright
-        String msg = "PaintByNumber Software Copyright (c) 2010-2012, Lynne N Newberry";
+		int year = Calendar.getInstance().get(Calendar.YEAR);
+        String msg = "PaintByNumberPro Software Copyright (c) " + year + ", Lynne N Newberry";
         if (myPuzzle.GetSource() != null) msg += "  Puzzle source: " + myPuzzle.GetSource();
 		g2D.drawString(msg,
 			panel_rect.x + 4, panel_rect.y+panel_rect.height - 4);
