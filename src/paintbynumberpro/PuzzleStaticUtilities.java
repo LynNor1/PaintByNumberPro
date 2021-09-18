@@ -490,7 +490,7 @@ public class PuzzleStaticUtilities {
 		return myPuzzle;
 	}
 
-	public static boolean WritePuzzleToFile (PBNPuzzle myPuzzle, File myFile)
+	public static boolean WritePuzzleToFile (PBNPuzzle thePuzzle, File myFile)
 	{
         if (myFile == null) return false;
 		if (!myFile.exists())
@@ -539,6 +539,10 @@ public class PuzzleStaticUtilities {
 		}
 		try
 		{
+			// Clone the puzzle in case it's being updated as we run this function
+			PBNPuzzle myPuzzle = new PBNPuzzle(thePuzzle);
+			
+			// Continue on with the writing
             if (myPuzzle.GetSource() != null) myWriter.write ("Source\t" + myPuzzle.GetSource() + "\n");
 			myWriter.write("Rows\t" + myPuzzle.GetRows());
 			myWriter.write("\nCols\t" + myPuzzle.GetCols());
