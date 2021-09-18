@@ -159,7 +159,11 @@ public class PBNFrame extends JFrame implements WindowListener {
         {
 			public void actionPerformed (ActionEvent ae)
 			{
-				if (myDrawHandler != null) myDrawHandler.UndoLastGuess();
+				if (myDrawHandler != null) 
+				{
+					myDrawHandler.UndoLastGuess();
+					myDrawHandler.Redraw();
+				}
 			}
         });
 
@@ -204,7 +208,11 @@ public class PBNFrame extends JFrame implements WindowListener {
 		{
 			public void actionPerformed (ActionEvent ae)
 			{
-				if (myDrawHandler != null) myDrawHandler.RemoveMarks();
+				if (myDrawHandler != null) 
+				{
+					myDrawHandler.RemoveMarks();
+					myDrawHandler.Redraw();
+				}
 			}
 		}
 		);
@@ -214,7 +222,11 @@ public class PBNFrame extends JFrame implements WindowListener {
 		{
 			public void actionPerformed (ActionEvent ae)
 			{
-				if (myDrawHandler != null) myDrawHandler.CommitGuesses();
+				if (myDrawHandler != null) 
+				{
+					myDrawHandler.CommitGuesses();
+					myDrawHandler.Redraw();
+				}
 			}
 		}
 		);
@@ -232,7 +244,11 @@ public class PBNFrame extends JFrame implements WindowListener {
 		{
 			public void actionPerformed (ActionEvent ae)
 			{
-                if (myDrawHandler != null) myDrawHandler.UndoLastGuess();
+                if (myDrawHandler != null) 
+				{
+					myDrawHandler.UndoLastGuess();
+					myDrawHandler.Redraw();
+				}
 			}
 		}
 		);

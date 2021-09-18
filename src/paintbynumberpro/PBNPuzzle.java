@@ -1136,7 +1136,9 @@ public class PBNPuzzle {
                 {
                     puzzle[first_guess_row][first_guess_col].SetGuessLevel (0);
                 }
-            }
+            } else
+				puzzle[first_guess_row][first_guess_col].SetGuessLevel (0);
+			
             puzzle[first_guess_row][first_guess_col].SetSpecialMarked(false);
             puzzle_backup[first_guess_row][first_guess_col].CloneStatusFromSquare(
                     puzzle[first_guess_row][first_guess_col]);

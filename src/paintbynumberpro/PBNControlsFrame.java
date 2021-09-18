@@ -876,19 +876,35 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
     }//GEN-LAST:event_CheckForErrors_JButtonActionPerformed
 
     private void Undo_JButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Undo_JButtonActionPerformed
-        if (myDrawHandler != null) myDrawHandler.Undo();
+        if (myDrawHandler != null) 
+		{
+			myDrawHandler.Undo();
+			myDrawHandler.Redraw();
+		}
     }//GEN-LAST:event_Undo_JButtonActionPerformed
 
     private void RemoveMarks_JButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_RemoveMarks_JButtonActionPerformed
-        if (myDrawHandler != null) myDrawHandler.RemoveMarks();
+        if (myDrawHandler != null) 
+		{
+			myDrawHandler.RemoveMarks();
+			myDrawHandler.Redraw();
+		}
     }//GEN-LAST:event_RemoveMarks_JButtonActionPerformed
 
     private void CommitGuesses_JButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CommitGuesses_JButtonActionPerformed
-        if (myDrawHandler != null) myDrawHandler.CommitGuesses();
+        if (myDrawHandler != null) 
+		{
+			myDrawHandler.CommitGuesses();
+			myDrawHandler.Redraw();
+		}
     }//GEN-LAST:event_CommitGuesses_JButtonActionPerformed
 
     private void UndoLastGuess_JButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_UndoLastGuess_JButtonActionPerformed
-        if (myDrawHandler != null) myDrawHandler.UndoLastGuess();
+        if (myDrawHandler != null) 
+		{
+			myDrawHandler.UndoLastGuess();
+			myDrawHandler.Redraw();
+		}
     }//GEN-LAST:event_UndoLastGuess_JButtonActionPerformed
 
     private void ClearPuzzle_JButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ClearPuzzle_JButtonActionPerformed
