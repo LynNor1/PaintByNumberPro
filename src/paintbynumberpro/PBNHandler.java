@@ -1900,7 +1900,7 @@ public class PBNHandler implements Printable {
         myPuzzleFrame.ModeChanged();
     }
 
-    public void SolvePuzzle (boolean debugging)
+    public void SolvePuzzle (boolean debugging, boolean auto_stop_at_new_guess)
     {
         if (myPuzzle == null) return;
 
@@ -1914,6 +1914,7 @@ public class PBNHandler implements Printable {
 //        solverThread.SetPuzzleToSolve (mySolvedPuzzle);
         solverThread.SetPuzzleToSolve (myPuzzle);
         solverThread.SetDebugging (debugging);
+		solverThread.SetAutoStopAtEachNewGuess(auto_stop_at_new_guess);
         solverThread.start();
     }
 

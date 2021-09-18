@@ -19,6 +19,8 @@ public class PuzzleSolverThread extends Thread {
 
     private PBNPuzzle puzzleToSolve = null;
     private boolean do_stop = false;
+	private boolean auto_stop_at_each_new_guess = true;
+	private boolean auto_stop = false; // switch to true when triggered by a new guess
 
     private PBNFrame frameToRedraw = null;
 
@@ -43,6 +45,9 @@ public class PuzzleSolverThread extends Thread {
         do_stop = true;
         PuzzleSolver.SetDoStop(true);
     }
+	
+	public void SetAutoStopAtEachNewGuess (boolean state)
+	{ auto_stop_at_each_new_guess = state; }
 
     private boolean DoDebug ()
     {
@@ -50,6 +55,9 @@ public class PuzzleSolverThread extends Thread {
         return PuzzleSolver.CheckATarget (puzzleToSolve, start_debug_row, start_debug_col,
                 start_debug_status, true);
     }
+	
+	public boolean GetAutoStop ()
+	{ return auto_stop; }
 
     private void RedrawFrame ()
     {
@@ -215,9 +223,19 @@ if (DoDebug()) PaintByNumberPro.HandleMessageForSolver ("Solver", "After first I
 
         // Alright here we go!
         boolean abort_processing = false;
+		auto_stop = false;
         while (!abort_processing && puzzleToSolve.CountKnownSquares() < total_squares && !do_stop)
         {
-
+			if (auto_stop_at_each_new_guess)
+			{
+				PaintByNumberPro.HandleMessage ("Puzzle Solver",
+						"Auto stop!");				
+				abort_processing = true;
+				auto_stop = true;
+			}
+			else
+			{
+			
             // Set up for a new guess (we'll mark the start of the guess ourselves)
             puzzleToSolve.StartNewGuessLevel(false);
             guess_level = puzzleToSolve.GetGuessLevel();
@@ -295,6 +313,8 @@ else
 }
                 }
             }
+			
+			} // auto_stop_at_each_new_guess
 
             // Otherwise, we can just make a new guess
         }
@@ -307,7 +327,7 @@ else
         PaintByNumberPro.GetDrawHandler().SetMode (PBNHandler.Mode.NORMAL);
 
         // Well if we made it this far, the puzzle should be solved!
-        if (!do_stop)
+        if (!do_stop && !auto_stop)
         {
             if (PuzzleSolver.IsPuzzleCorrect(puzzleToSolve))
             {

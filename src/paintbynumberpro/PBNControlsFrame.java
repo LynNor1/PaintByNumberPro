@@ -185,6 +185,7 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
         CheckForErrors_JButton.setEnabled(puzzle_is_active);
         SolvePuzzle_JButton.setEnabled(puzzle_is_active);
         Debug_JCheckBox.setEnabled(puzzle_is_active);
+		autoStop_JCheckBox.setEnabled(puzzle_is_active);
         AutoSave_JCheckBox.setEnabled(puzzle_is_active);
         AutoSave_JComboBox.setEnabled(puzzle_is_active);
         GiveMeAClue_JButton.setEnabled(puzzle_is_active);
@@ -243,6 +244,7 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
         Debug_JCheckBox = new javax.swing.JCheckBox();
         CheckSolution_JButton = new javax.swing.JButton();
         Stop_JButton = new javax.swing.JButton();
+        autoStop_JCheckBox = new javax.swing.JCheckBox();
         jPanel4 = new javax.swing.JPanel();
         AutoMarkStart_JCheckBox = new javax.swing.JCheckBox();
         GuessLevel_JLabel = new javax.swing.JLabel();
@@ -445,6 +447,7 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
         PuzzleSolvedStatus_JLabel.setText("Puzzle has NOT been solved");
 
         SolvePuzzle_JButton.setText("Auto Finish");
+        SolvePuzzle_JButton.setToolTipText("Run the automatic solver");
         SolvePuzzle_JButton.setEnabled(false);
         SolvePuzzle_JButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -476,6 +479,10 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
             }
         });
 
+        autoStop_JCheckBox.setText("Auto Stop");
+        autoStop_JCheckBox.setToolTipText("Have auto-solver stop when it needs to make a guess");
+        autoStop_JCheckBox.setEnabled(false);
+
         org.jdesktop.layout.GroupLayout jPanel3Layout = new org.jdesktop.layout.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -489,11 +496,13 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
                         .add(CheckSolution_JButton))
                     .add(jPanel3Layout.createSequentialGroup()
                         .add(SolvePuzzle_JButton)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(Debug_JCheckBox)
-                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 67, Short.MAX_VALUE)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(autoStop_JCheckBox)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                         .add(Stop_JButton)))
-                .addContainerGap())
+                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -505,7 +514,8 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
                 .add(jPanel3Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(SolvePuzzle_JButton)
                     .add(Debug_JCheckBox)
-                    .add(Stop_JButton)))
+                    .add(Stop_JButton)
+                    .add(autoStop_JCheckBox)))
         );
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Puzzle Controls"));
@@ -620,7 +630,7 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
                                 .add(GuessLevel_JComboBox, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 131, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                                 .add(18, 18, 18)
                                 .add(EditColors_JButton)))
-                        .addContainerGap())))
+                        .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -827,13 +837,13 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(jPanel3, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jPanel4, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING, false)
+                    .add(jPanel4, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .add(jPanel1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                     .add(jPanel2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                    .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .add(jPanel5, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                    .add(jPanel3, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(18, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
@@ -894,7 +904,8 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
     }//GEN-LAST:event_Redraw_JButtonActionPerformed
 
     private void SolvePuzzle_JButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SolvePuzzle_JButtonActionPerformed
-        if (myDrawHandler != null) myDrawHandler.SolvePuzzle(Debug_JCheckBox.isSelected());
+        if (myDrawHandler != null) 
+			myDrawHandler.SolvePuzzle(Debug_JCheckBox.isSelected(), autoStop_JCheckBox.isSelected());
     }//GEN-LAST:event_SolvePuzzle_JButtonActionPerformed
 
     private void BoxSizeUp_JButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BoxSizeUp_JButtonActionPerformed
@@ -1023,6 +1034,7 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
     private javax.swing.JButton Stop_JButton;
     private javax.swing.JButton UndoLastGuess_JButton;
     private javax.swing.JButton Undo_JButton;
+    private javax.swing.JCheckBox autoStop_JCheckBox;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;

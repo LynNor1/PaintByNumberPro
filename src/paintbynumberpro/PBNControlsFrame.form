@@ -24,6 +24,7 @@
   </Properties>
   <SyntheticProperties>
     <SyntheticProperty name="formSizePolicy" type="int" value="1"/>
+    <SyntheticProperty name="generateCenter" type="boolean" value="false"/>
   </SyntheticProperties>
   <AuxValues>
     <AuxValue name="FormSettings_autoResourcing" type="java.lang.Integer" value="0"/>
@@ -42,14 +43,14 @@
       <Group type="103" groupAlignment="0" attributes="0">
           <Group type="102" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="jPanel3" alignment="0" min="-2" max="-2" attributes="1"/>
-                  <Component id="jPanel4" alignment="0" min="-2" max="-2" attributes="1"/>
+              <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                  <Component id="jPanel4" alignment="0" max="32767" attributes="1"/>
                   <Component id="jPanel1" alignment="0" min="-2" max="-2" attributes="1"/>
                   <Component id="jPanel2" alignment="0" min="-2" max="-2" attributes="1"/>
                   <Component id="jPanel5" alignment="0" min="-2" max="-2" attributes="1"/>
+                  <Component id="jPanel3" alignment="0" max="32767" attributes="1"/>
               </Group>
-              <EmptySpace max="32767" attributes="0"/>
+              <EmptySpace pref="18" max="32767" attributes="0"/>
           </Group>
       </Group>
     </DimensionLayout>
@@ -305,13 +306,15 @@
                       </Group>
                       <Group type="102" alignment="0" attributes="0">
                           <Component id="SolvePuzzle_JButton" min="-2" max="-2" attributes="1"/>
-                          <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
                           <Component id="Debug_JCheckBox" min="-2" max="-2" attributes="0"/>
-                          <EmptySpace pref="67" max="32767" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="autoStop_JCheckBox" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
                           <Component id="Stop_JButton" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
-                  <EmptySpace max="-2" attributes="0"/>
+                  <EmptySpace max="32767" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -327,6 +330,7 @@
                       <Component id="SolvePuzzle_JButton" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="Debug_JCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="Stop_JButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="autoStop_JCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
           </Group>
@@ -341,6 +345,7 @@
         <Component class="javax.swing.JButton" name="SolvePuzzle_JButton">
           <Properties>
             <Property name="text" type="java.lang.String" value="Auto Finish"/>
+            <Property name="toolTipText" type="java.lang.String" value="Run the automatic solver"/>
             <Property name="enabled" type="boolean" value="false"/>
           </Properties>
           <Events>
@@ -373,6 +378,13 @@
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="Stop_JButtonActionPerformed"/>
           </Events>
+        </Component>
+        <Component class="javax.swing.JCheckBox" name="autoStop_JCheckBox">
+          <Properties>
+            <Property name="text" type="java.lang.String" value="Auto Stop"/>
+            <Property name="toolTipText" type="java.lang.String" value="Have auto-solver stop when it needs to make a guess"/>
+            <Property name="enabled" type="boolean" value="false"/>
+          </Properties>
         </Component>
       </SubComponents>
     </Container>
