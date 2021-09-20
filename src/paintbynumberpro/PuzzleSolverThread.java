@@ -74,7 +74,17 @@ public class PuzzleSolverThread extends Thread {
         while (success && !no_change && !do_stop)
         {
             int first_num_knowns = puzzleToSolve.CountKnownSquares();
-
+ 
+			// ----------------------------
+			// BEGINNING OF OLD SOLVER CODE
+			// ----------------------------
+			
+			boolean do_old_solver = false;
+			boolean do_new_solver = true;
+			
+			if (do_old_solver)
+			{
+				
             // Edge processing
             boolean keep_edge_processing = true;
             while (keep_edge_processing && !do_stop)
@@ -97,10 +107,6 @@ public class PuzzleSolverThread extends Thread {
                 success = PuzzleSolver.ProcessBlobs (puzzleToSolve, guess_level);
                 int num_knowns = puzzleToSolve.CountKnownSquares();
                 RedrawFrame();
-                if (num_knowns == 1327)
-                {
-                    int b = 4;
-                }
                 if (success && (prev_num_knowns != num_knowns))
                     success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
                 keep_blob_processing = success && (prev_num_knowns != num_knowns);
@@ -130,7 +136,45 @@ public class PuzzleSolverThread extends Thread {
                 RedrawFrame();
                 if (prev_num_knowns != num_knowns) success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
                 keep_cleaning_up_unknowns = success && (prev_num_knowns != num_knowns);
+            }	
+			}
+			
+			if (do_new_solver)
+			{
+			
+			// ----------------------------
+			// BEGINNING OF NEW SOLVER CODE
+			// ----------------------------
+			
+			boolean keep_processing = true;
+			while (keep_processing && !do_stop)
+			{
+                int prev_num_knowns = puzzleToSolve.CountKnownSquares();
+				BetterPuzzleSolver solver = new BetterPuzzleSolver ();
+                success = solver.ProcessPuzzle (puzzleToSolve, guess_level);
+                int num_knowns = puzzleToSolve.CountKnownSquares();
+                RedrawFrame();
+                if (success && (prev_num_knowns != num_knowns))
+                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+
+                keep_processing = success && (prev_num_knowns != num_knowns);				
+			}
+			
+            // Edge processing
+            boolean keep_edge_processing = true;
+            while (keep_edge_processing && !do_stop)
+            {
+                int prev_num_knowns = puzzleToSolve.CountKnownSquares();
+                success = PuzzleSolver.ProcessEdges (puzzleToSolve, guess_level, false);
+                int num_knowns = puzzleToSolve.CountKnownSquares();
+                RedrawFrame();
+                if (success && (prev_num_knowns != num_knowns))
+                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+
+                keep_edge_processing = success && (prev_num_knowns != num_knowns);
             }
+			
+			}			
 
             int last_num_knowns = puzzleToSolve.CountKnownSquares();
 

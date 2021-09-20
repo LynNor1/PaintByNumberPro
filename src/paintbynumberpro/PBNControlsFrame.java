@@ -479,6 +479,7 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
             }
         });
 
+        autoStop_JCheckBox.setSelected(true);
         autoStop_JCheckBox.setText("Auto Stop");
         autoStop_JCheckBox.setToolTipText("Have auto-solver stop when it needs to make a guess");
         autoStop_JCheckBox.setEnabled(false);

@@ -12,7 +12,7 @@ import java.awt.*;
  *
  * @author user
  */
-public class PuzzleSolver extends Thread {
+public class PuzzleSolver {
 
     private static final String title = "Check Puzzle";
     private static final String UNKNOWN_ERROR = "Unknown error";
@@ -71,7 +71,7 @@ public class PuzzleSolver extends Thread {
         return newCol;
     }
     
-    private static int[] GetCluesForRowFromPuzzle (PBNPuzzle myPuzzle, int row)
+    public static int[] GetCluesForRowFromPuzzle (PBNPuzzle myPuzzle, int row)
     {
         int nclues = myPuzzle.GetRow_NClues(row);      
         if (nclues == 0) return null;
@@ -80,7 +80,7 @@ public class PuzzleSolver extends Thread {
         return myClues;
     }
     
-    private static int[] GetCluesForColFromPuzzle (PBNPuzzle myPuzzle, int col)
+    public static int[] GetCluesForColFromPuzzle (PBNPuzzle myPuzzle, int col)
     {
         int nclues = myPuzzle.GetCol_NClues(col);      
         if (nclues == 0) return null;

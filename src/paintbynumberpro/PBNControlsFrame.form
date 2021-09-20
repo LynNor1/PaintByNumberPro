@@ -381,6 +381,7 @@
         </Component>
         <Component class="javax.swing.JCheckBox" name="autoStop_JCheckBox">
           <Properties>
+            <Property name="selected" type="boolean" value="true"/>
             <Property name="text" type="java.lang.String" value="Auto Stop"/>
             <Property name="toolTipText" type="java.lang.String" value="Have auto-solver stop when it needs to make a guess"/>
             <Property name="enabled" type="boolean" value="false"/>
