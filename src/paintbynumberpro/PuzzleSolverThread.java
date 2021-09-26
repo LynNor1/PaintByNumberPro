@@ -147,29 +147,37 @@ public class PuzzleSolverThread extends Thread {
 			// ----------------------------
 			
 			boolean keep_processing = true;
+			BetterPuzzleSolver solver = new BetterPuzzleSolver();
 			while (keep_processing && !do_stop)
 			{
+				System.out.println ("ProcessPuzzle...");
                 int prev_num_knowns = puzzleToSolve.CountKnownSquares();
-				BetterPuzzleSolver solver = new BetterPuzzleSolver ();
                 success = solver.ProcessPuzzle (puzzleToSolve, guess_level);
                 int num_knowns = puzzleToSolve.CountKnownSquares();
                 RedrawFrame();
                 if (success && (prev_num_knowns != num_knowns))
+				{
+					System.out.println ("CheckPuzzleSoFar...");
                     success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+				}
 
                 keep_processing = success && (prev_num_knowns != num_knowns);				
 			}
 			
             // Edge processing
-            boolean keep_edge_processing = true;
+            boolean keep_edge_processing = keep_processing;
             while (keep_edge_processing && !do_stop)
             {
+				System.out.println ("ProcessEdges...");
                 int prev_num_knowns = puzzleToSolve.CountKnownSquares();
                 success = PuzzleSolver.ProcessEdges (puzzleToSolve, guess_level, false);
                 int num_knowns = puzzleToSolve.CountKnownSquares();
                 RedrawFrame();
                 if (success && (prev_num_knowns != num_knowns))
+				{
+					System.out.println ("CheckPuzzleSoFar...");
                     success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+				}
 
                 keep_edge_processing = success && (prev_num_knowns != num_knowns);
             }

@@ -220,26 +220,26 @@ public class PuzzleSolver {
         // to check the puzzle and they WILL want to see the error message
         if (myPuzzle == null) return false;
         last_msg = UNKNOWN_ERROR;
+		
+		BetterPuzzleSolver bps = new BetterPuzzleSolver();
 
         // Check rows first
         for (int r=0; r<myPuzzle.GetRows(); r++)
         {
-            if (!CanSolutionFitInRow(myPuzzle, r, false))
+			if (!bps.Better_CanSolutionFit (myPuzzle, true, r))
             {
                 if (!for_solver && last_msg != null)
                     PaintByNumberPro.HandleErrorMessage (title, last_msg);
-//                PuzzleStaticUtilities.DumpOneRow (myPuzzle, r, last_msg);
                 return false;
             }
         }
 
         // Check cols next
         for (int c=0; c<myPuzzle.GetCols(); c++)
-            if (!CanSolutionFitInCol(myPuzzle, c, false))
+			if (!bps.Better_CanSolutionFit (myPuzzle, false, c))
             {
                 if (!for_solver && last_msg != null)
                     PaintByNumberPro.HandleErrorMessage (title, last_msg);
-//                PuzzleStaticUtilities.DumpOneColumn(myPuzzle, c, last_msg);
                 return false;
             }
 
@@ -556,7 +556,9 @@ public class PuzzleSolver {
             for (int rr=cur_row; rr<=slop && !found_filled && !its_possible; rr++)
             {
                 if (myCol[rr].IsFilled()) found_filled = true;
-                if (CanSolutionFitInColFromRowClue(myPuzzle, myCol, col, rr, 0, verbose) == BType.TRUE) its_possible = true;
+				BetterPuzzleSolver bps = new BetterPuzzleSolver();
+				its_possible = bps.CanSolutionFitStartingFromClue(myPuzzle, myCol, false, col, rr, 0, 1);				
+//                if (CanSolutionFitInColStartingFromClue(myPuzzle, myCol, col, rr, 0, verbose) == BType.TRUE) its_possible = true;
             }
             if (its_possible)
             {
@@ -642,8 +644,14 @@ public class PuzzleSolver {
             for (int cc=cur_col; cc<=slop && !found_filled && !its_possible; cc++)
             {
                 if (myRow[cc].IsFilled()) found_filled = true;
-                if (CanSolutionFitInRowFromColClue(myPuzzle, myRow, row, cc, 0, verbose, 1) == BType.TRUE) its_possible = true;
-            }
+				if (!myRow[cc].IsEmpty())	// Move on until we get to a new UNKNOWN or FILLED square
+				{
+					BetterPuzzleSolver bps = new BetterPuzzleSolver();
+					its_possible = bps.CanSolutionFitStartingFromClue(myPuzzle, myRow, true, row, cc, 0, 1);
+//					if (CanSolutionFitInRowStartingFromClue(myPuzzle, myRow, row, cc, 0, verbose, 1) == BType.TRUE) its_possible = true;
+
+				}
+			}
             if (its_possible)
             {
                 last_msg = "Row " + row + " looks good so far!";
@@ -663,7 +671,7 @@ public class PuzzleSolver {
 
     // This method is used recursively!
     // Do NOT change the actual puzzle, but operate on myRow instead
-    private static BType CanSolutionFitInRowFromColClue (PBNPuzzle myPuzzle, PuzzleSquare[] myRow,
+    private static BType CanSolutionFitInRowStartingFromClue (PBNPuzzle myPuzzle, PuzzleSquare[] myRow,
             int row, int cur_col, int cur_clue, boolean verbose, int recursion_level)
     {
         assert (!myRow[cur_col].IsEmpty());
@@ -823,7 +831,7 @@ public class PuzzleSolver {
                             started_filled = myPuzzle.GetPuzzleSquareAt (row, new_cur_col).IsFilled();
                         
                             // If we can fit the rest of the clues in the rest of the line, then we're done!
-                            BType can_do = CanSolutionFitInRowFromColClue (myPuzzle, myRow, row, new_cur_col, cur_clue, verbose, recursion_level+1);
+                            BType can_do = CanSolutionFitInRowStartingFromClue (myPuzzle, myRow, row, new_cur_col, cur_clue, verbose, recursion_level+1);
                             if (can_do == BType.TRUE)
                             {
                                 last_msg = "In row " + row + " we can put clue " + cur_clue + " starting at col " +
@@ -888,7 +896,7 @@ public class PuzzleSolver {
                         }
                         started_filled = myPuzzle.GetPuzzleSquareAt (row, new_cur_col).IsFilled();
 
-                        BType can_do = CanSolutionFitInRowFromColClue (myPuzzle, myRow, row, new_cur_col, new_cur_clue, verbose, recursion_level+1);
+                        BType can_do = CanSolutionFitInRowStartingFromClue (myPuzzle, myRow, row, new_cur_col, new_cur_clue, verbose, recursion_level+1);
                         if (can_do == BType.TRUE)
                         {
                             last_msg = "In row " + row + " we can put clue " + new_cur_clue + " starting at col " +
@@ -968,7 +976,7 @@ public class PuzzleSolver {
                         }
                         started_filled = myPuzzle.GetPuzzleSquareAt(row, new_cur_col).IsFilled();
 
-                        BType can_do = CanSolutionFitInRowFromColClue (myPuzzle, myRow, row, new_cur_col, cur_clue, verbose, recursion_level+1);
+                        BType can_do = CanSolutionFitInRowStartingFromClue (myPuzzle, myRow, row, new_cur_col, cur_clue, verbose, recursion_level+1);
                         if (can_do == BType.TRUE)
                         {
                             last_msg = "In row " + row + " we can put clue " + cur_clue + " starting at col " +
@@ -997,7 +1005,7 @@ public class PuzzleSolver {
 
     // This method is used recursively!
     // Do NOT change the actual puzzle, but operate on myRow instead
-    private static BType CanSolutionFitInColFromRowClue (PBNPuzzle myPuzzle, PuzzleSquare[] myCol,
+    private static BType CanSolutionFitInColStartingFromClue (PBNPuzzle myPuzzle, PuzzleSquare[] myCol,
             int col, int cur_row, int cur_clue, boolean verbose)
     {
         assert (!myCol[cur_row].IsEmpty());
@@ -1157,7 +1165,7 @@ public class PuzzleSolver {
                             }
                             started_filled = myPuzzle.GetPuzzleSquareAt (new_cur_row, col).IsFilled();
 
-                            BType can_do = CanSolutionFitInColFromRowClue (myPuzzle, myCol, col, new_cur_row, cur_clue, verbose);
+                            BType can_do = CanSolutionFitInColStartingFromClue (myPuzzle, myCol, col, new_cur_row, cur_clue, verbose);
                             if (can_do == BType.TRUE)
                             {
                                 last_msg = "In col " + col + " we can fit clue " + cur_clue + " starting in row " +
@@ -1221,7 +1229,7 @@ public class PuzzleSolver {
                         }
                         started_filled = myPuzzle.GetPuzzleSquareAt(new_cur_row, col).IsFilled();
 
-                        BType can_do = CanSolutionFitInColFromRowClue (myPuzzle, myCol, col, new_cur_row, new_cur_clue, verbose);
+                        BType can_do = CanSolutionFitInColStartingFromClue (myPuzzle, myCol, col, new_cur_row, new_cur_clue, verbose);
                         if (can_do == BType.TRUE)
                         {
                             last_msg = "In col " + col + " we can fit clue " + new_cur_clue + " starting in row " +
@@ -1304,7 +1312,7 @@ public class PuzzleSolver {
                         }
                         started_filled = myPuzzle.GetPuzzleSquareAt (new_cur_row, col).IsFilled();
 
-                        BType can_do = CanSolutionFitInColFromRowClue (myPuzzle, myCol, col, new_cur_row, cur_clue, verbose);
+                        BType can_do = CanSolutionFitInColStartingFromClue (myPuzzle, myCol, col, new_cur_row, cur_clue, verbose);
                         if (can_do == BType.TRUE)
                         {
                             last_msg = "In col " + col + " we can fit clue " + cur_clue + " starting in row " +

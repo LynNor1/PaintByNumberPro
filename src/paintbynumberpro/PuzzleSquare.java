@@ -36,6 +36,9 @@ public class PuzzleSquare {
     private boolean is_marked = false;
     private int guess_level = 0;
     private SquareStatus status = SquareStatus.UNKNOWN;
+	
+	// Only used by BetterPuzzleSolver.Better_CanSolutionFit()
+	public int clue_index = 0;
 
     PuzzleSquare (int fromStatus)
     {
@@ -156,6 +159,12 @@ public class PuzzleSquare {
         status = stat;
         guess_level = level;
     }
+	public void SetStatus (SquareStatus stat, int level, int clue_idx)
+	{
+		status = stat;
+		guess_level = level;
+		clue_index = clue_idx;
+	}
     
     public void Reset ()
     {

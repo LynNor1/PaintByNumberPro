@@ -18,6 +18,19 @@ public class BetterPuzzleSolver {
 	// -------------------------------------------
 	// Private classes we need to solve the puzzle
 	// -------------------------------------------
+	
+	// Exception which can be thrown when we're trying to recursively decide
+	// if a solution exists within the squares
+	private class CanFitSolutionException extends Exception
+	{
+		CanFitSolutionException (String msg)
+		{ super(msg); }
+	}
+	private class WeAreGoodException extends Exception
+	{
+		WeAreGoodException (String msg)
+		{ super(msg); }
+	}
 
 	// Contiguous squares of UNKNOWN or FILLED
 	public class Range 
@@ -26,6 +39,7 @@ public class BetterPuzzleSolver {
 		private int end;
 		private ArrayList<Integer> blob_indices;
 		private LinkedList<Integer> clue_indices;
+		private ArrayList<Blob> blobs;	// only used by CanSolutionFitInRow|ColStartingFromClue
 		
 		Range (int s, int e)
 		{
@@ -49,6 +63,34 @@ public class BetterPuzzleSolver {
 				}
 			}
 			return newBlobs;
+		}
+		public void FindBlobsInRange (PuzzleSquare[] squares)
+		{
+			blobs = new ArrayList();
+			int blob_start = 0;
+			int blob_end = 0;
+			boolean blob_open = false;
+			for (int i=start; i<=end; i++)
+			{
+				if (squares[i].IsFilled())
+				{
+					if (!blob_open)
+					{
+						blob_start = i;
+						blob_open = true;
+					}
+					blob_end = i;
+				} else
+				{
+					if (blob_open)
+					{
+						blobs.add(new Blob (blob_start, blob_end, false, false, false, false, false, false));
+						blob_open = false;
+					}
+				}
+			}
+			if (blob_open)
+				blobs.add(new Blob (blob_start, blob_end, false, false, false, false, false, false));		
 		}
 		public int GetLength() {
 			return end-start+1;
@@ -549,9 +591,8 @@ public class BetterPuzzleSolver {
 		// from left to right and right to left, in order to pick up any fixed
 		// clues that weren't already picked up.  This let's us also possibly
 		// anchor clues
-		// I WANT TO WORK THIS IN EVENTUALLY!!! LYNNE!!!!!
-		/*
-		int which_clue = 0;
+
+		int which_clue_next = 0;
 		boolean keep_processing = true;
 		int isquare = 0;
 		boolean tracking_blob = false;	// Set it to true while we're tracking a Blob
@@ -561,26 +602,42 @@ public class BetterPuzzleSolver {
 		int count_uncertainty = 0;
 		while (keep_processing)
 		{
+			if (checking_uncertainty && !squares[isquare].IsFilled())
+			{
+				if (tracking_blob)
+				{
+					int blob_len = blob_end - blob_start + 1;
+					int clue_val = myClues.clue_list[which_clue_next].value;
+					if (count_uncertainty < clue_val && blob_len <= clue_val)
+						if (blob_len == clue_val) {
+							myClues.clue_list[which_clue_next].SetFixed(blob_start, blob_end);	
+						} else
+						{
+							myClues.clue_list[which_clue_next].SetAnchored(blob_start, blob_end);							
+						}
+					tracking_blob = false;
+				}
+				keep_processing = false;				
 			// If puzzle square is UNKNOWN and we're not checking_uncertainty
 			// then we're done
-			if (squares[isquare].IsUnknown())
+			} else if (squares[isquare].IsUnknown())
 			{
 				// We're already counting UNKNOWNs
 				if (checking_uncertainty)
 				{
 					count_uncertainty++;
-					if (count_uncertainty >= myClues.clue_list[which_clue].value)
+					if (count_uncertainty >= myClues.clue_list[which_clue_next].value)
 						keep_processing = false;
 				} else
 				{
 					// See if it's worth tracking the UNKNOWNs (clue value must
 					// be > 1)
-					if (myClues.clue_list[which_clue].value == 1)
+					if (myClues.clue_list[which_clue_next].value == 1)
 						keep_processing = false;
 					else
 					{
 						checking_uncertainty = true;
-						count_uncertainty++;
+						count_uncertainty = 1;
 					}
 				}
 			} else if (squares[isquare].IsEmpty())
@@ -590,10 +647,12 @@ public class BetterPuzzleSolver {
 				if (tracking_blob)
 				{
 					int blob_len = blob_end - blob_start + 1;
-					assert (blob_len == myClues.clue_list[which_clue].value);
-					myClues.clue_list[which_clue].SetFixed(blob_start, blob_end);
-					which_clue++;
-					keep_processing =  which_clue < myClues.clue_list.length;
+					if (blob_len == myClues.clue_list[which_clue_next].value)
+					{
+						myClues.clue_list[which_clue_next].SetFixed(blob_start, blob_end);
+						which_clue_next++;
+						keep_processing =  which_clue_next < myClues.clue_list.length;
+					}
 				}
 				tracking_blob = false;
 			} else
@@ -611,11 +670,103 @@ public class BetterPuzzleSolver {
 		}
 		if (isquare == squares.length && tracking_blob)
 		{
+			int clue_val = myClues.clue_list[which_clue_next].value;
 			int blob_len = blob_end - blob_start + 1;
-			assert (blob_len == myClues.clue_list[which_clue].value);
-			myClues.clue_list[which_clue].SetFixed(blob_start, blob_end);			
+			if (blob_len == clue_val)
+				myClues.clue_list[which_clue_next].SetFixed(blob_start, blob_end);
+			else if (checking_uncertainty && count_uncertainty < clue_val && 
+					blob_len < clue_val)
+				myClues.clue_list[which_clue_next].SetAnchored(blob_start, blob_end);	
 		}
-		*/
+		
+		// Repeat going from right to left
+		which_clue_next = myClues.NumClues()-1;
+		keep_processing = true;
+		isquare = squares.length-1;
+		tracking_blob = false;	// Set it to true while we're tracking a Blob
+		blob_start = 0;
+		blob_end = 0;	// When we're done with Blob, assign it to
+						// which_clue_next
+		checking_uncertainty = false;
+		count_uncertainty = 0;
+		while (keep_processing)
+		{
+			if (checking_uncertainty && !squares[isquare].IsFilled())
+			{
+				if (tracking_blob)
+				{
+					int blob_len = blob_end - blob_start + 1;	
+					int clue_val = myClues.clue_list[which_clue_next].value;
+					if (count_uncertainty < clue_val && blob_len <= clue_val)
+						if (blob_len == clue_val) {
+							myClues.clue_list[which_clue_next].SetFixed(blob_start, blob_end);
+						} else {
+							myClues.clue_list[which_clue_next].SetAnchored(blob_start, blob_end);						
+						}
+					tracking_blob = false;
+				}
+				keep_processing = false;								
+			// If puzzle square is UNKNOWN and we're not checking_uncertainty
+			// then we're done
+			} else if (squares[isquare].IsUnknown())
+			{
+				// We're already counting UNKNOWNs
+				if (checking_uncertainty)
+				{
+					count_uncertainty++;
+					if (count_uncertainty >= myClues.clue_list[which_clue_next].value)
+						keep_processing = false;
+				} else
+				{
+					// See if it's worth tracking the UNKNOWNs (clue value must
+					// be > 1)
+					if (myClues.clue_list[which_clue_next].value == 1)
+						keep_processing = false;
+					else
+					{
+						checking_uncertainty = true;
+						count_uncertainty = 1;
+					}
+				}
+			} else if (squares[isquare].IsEmpty())
+			{
+				// if we were tracking a Blob, then assign it to the Clue's
+				// fixed location
+				if (tracking_blob)
+				{
+					int blob_len = blob_end - blob_start + 1;
+					if (blob_len == myClues.clue_list[which_clue_next].value)
+					{
+						myClues.clue_list[which_clue_next].SetFixed(blob_start, blob_end);
+						which_clue_next--;
+						keep_processing =  which_clue_next >= 0;
+					}
+					else keep_processing = false;
+				}
+				tracking_blob = false;
+			} else
+			{
+				// Handle a FILLED square if we're tracking an uncertainty
+				if (!tracking_blob)
+				{
+					blob_end = isquare;
+					tracking_blob = true;
+				}
+				blob_start = isquare;
+			}
+			isquare--;
+			if (isquare == -1) keep_processing = false;
+		}
+		if (isquare == -1 && tracking_blob)
+		{
+			int clue_val = myClues.clue_list[which_clue_next].value;
+			int blob_len = blob_end - blob_start + 1;
+			if (blob_len == clue_val)
+				myClues.clue_list[which_clue_next].SetFixed(blob_start, blob_end);	
+			else if (checking_uncertainty && count_uncertainty < clue_val && 
+					blob_len < clue_val)
+				myClues.clue_list[which_clue_next].SetAnchored(blob_start, blob_end);	
+		}		
 		
 		// Let's get the Blobs.  If any are fully anchored and match a single
 		// clue value, then we can assign that blob to that clue.  We can
@@ -878,6 +1029,36 @@ public class BetterPuzzleSolver {
 		return squares;
 	}
 	
+	public static String DumpSquaresAndGuessLevels (PuzzleSquare[] sqs, int start_col)
+	{
+		if (sqs == null) return "";
+		String msg1 = DumpSquares (sqs);
+
+		String msg2 = "";
+		for (int i=0; i<sqs.length; i++)
+		{
+			int guess_level = sqs[i].GetGuessLevel();
+			msg2 += ""+guess_level;
+			if (guess_level > 9) msg2 += " ";	// put a space between double-digit guess levels
+			if ((i+1) % 5 == 0) msg2 += " ";
+		}
+		msg2 += "\n";
+		
+		String msg3 = "";
+		if (start_col >= 0 && start_col < sqs.length)
+		{
+			for (int i=0; i<sqs.length; i++)
+			{
+				if (i==start_col) msg2 += "*";
+				else msg2 += " ";
+				if ((i+1) % 5 == 0) msg2 += " ";
+			}
+			msg2 += "\n";			
+		}
+		
+		return msg1 + msg2 + msg3;		
+		
+	}
 	public static String DumpSquares (PuzzleSquare[] sqs)
 	{
 		if (sqs == null) return "";
@@ -2039,5 +2220,755 @@ public class BetterPuzzleSolver {
         int num_squares = myRow.length;
         for (int i=0; i<num_squares; i++)
             myPuzzle.SetPuzzleRowCol(row, i+start_col, myRow[i]);
-    }    	
+    }
+	
+	// -----------------------------------------------------------------------------------
+	// Functions for old PuzzleSolver to replace CanSolutionFitInRow|ColStartingFromClue()
+	// CanSolutionFitInRow|Col()
+	// -----------------------------------------------------------------------------------
+	
+	public boolean Better_CanSolutionFit (PBNPuzzle myPuzzle, boolean is_row, int row_or_col) 
+	{
+		int N = is_row ? myPuzzle.GetCols() : myPuzzle.GetRows();
+		PuzzleSquare[] temp_sqs = new PuzzleSquare[N];
+		for (int i=0; i<N; i++)
+		{
+			if (is_row) temp_sqs[i] = new PuzzleSquare(myPuzzle.GetBackupPuzzleSquareAt(row_or_col, i));
+			else        temp_sqs[i] = new PuzzleSquare(myPuzzle.GetBackupPuzzleSquareAt(i, row_or_col));
+			temp_sqs[i].SetNotAGuess();
+		}
+		
+		int debug_row = -1;
+		int debug_row2 = -1;
+		boolean do_debug = (is_row && (row_or_col == debug_row || row_or_col == debug_row2));
+		
+		// set the initial guess level
+		int guess_level = 1;
+		
+		// set the current clue being processed
+		int clue_idx = 0;
+		int clue_val = 0;
+				
+		// helper vars
+		int Nclues;
+		if (is_row) Nclues = myPuzzle.GetRow_NClues(row_or_col);
+		else        Nclues = myPuzzle.GetCol_NClues(row_or_col);	
+		
+		// set start of current extent to process
+		int start_col = 0;
+		
+		// We'll just assume it will fit
+		boolean it_fits = true;		
+		
+		// keep processing until we have no options left
+		boolean keep_processing = true;
+		while (keep_processing)
+		{
+			try {
+		
+				// -----------------------------------------------
+				// Set-up for processing clue_idx within cur_Range
+				// -----------------------------------------------
+				
+				// Get all Ranges starting from start_col to end
+				ArrayList<Range> ranges = GetAllRangesInExtent (temp_sqs, start_col, temp_sqs.length-1);
+				assert (!ranges.isEmpty());
+
+				// For each Range, find the Blobs (if any) within each Range
+				for (Range r: ranges)
+					r.FindBlobsInRange (temp_sqs);
+
+				// Set current Range
+				int cur_range_idx = 0;
+				Range cur_Range = ranges.get(cur_range_idx);	
+
+				// Update clue value
+				if (is_row) clue_val = myPuzzle.GetRow_Clues(row_or_col, clue_idx);
+				else        clue_val = myPuzzle.GetCol_Clues(row_or_col, clue_idx);
+
+				if (do_debug) {
+					System.out.println ("Processing clue index " + clue_idx + 
+							" (" + clue_val + ") from square " + start_col);
+					System.out.println (DumpSquaresAndGuessLevels (temp_sqs, start_col));
+					noop();
+				}			
+
+				// -------------------------------------------------------------
+				// While we're just eliminating Ranges that are too small and are
+				// empty, we can loop over processing the current clue
+				// -------------------------------------------------------------
+				boolean keep_skipping_empty_small_ranges = true;
+				while (keep_skipping_empty_small_ranges)
+				{
+					int range_len = cur_Range.GetLength();
+
+					// current range is too small for current clue so let's EMPTY it out
+					if (range_len < clue_val)
+					{
+
+						// if the current Range has a Blob, then we have a problem
+						if (!cur_Range.blobs.isEmpty())
+							throw new CanFitSolutionException ("Range is too small AND it has a Blob in it");
+
+						// otherwise let's just EMPTY out the current Range
+						for (int idx=cur_Range.start; idx<=cur_Range.end; idx++)
+							temp_sqs[idx].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);	
+
+						if (do_debug) {
+							System.out.println ("Range too small for clue index " + clue_idx + " (" + clue_val + ") so EMPTY it");
+							System.out.println (DumpSquaresAndGuessLevels (temp_sqs, start_col));	
+							noop();
+						}
+
+						// and skip to the next Range
+						cur_range_idx++;
+
+						// if we've run out of Ranges, then we have a problem
+						if (cur_range_idx == ranges.size())
+							throw new CanFitSolutionException ("Eliminated a small Range, but no more left!");
+
+						// otherwise just get the next Range and try and process the
+						// current clue again
+						cur_Range = ranges.get(cur_range_idx);
+
+					// cur_Range is big enough that it *could* hold the next clue
+					} else 
+						keep_skipping_empty_small_ranges = false;
+
+				} // end skipping Ranges that are too small
+			
+				// --------------------------------------------------------------
+				// Done skipping Ranges that were too small, now process the ones
+				// that are big enough to hold the current clue.
+				// --------------------------------------------------------------
+				int range_len = cur_Range.GetLength();				
+				assert (range_len >= clue_val);
+
+				// if we're at the last clue, then we *could* be done, depending
+				// on Blobs in the current Range and all other Ranges to the right
+				if (clue_idx == Nclues-1)
+				{
+					if (cur_Range.blobs.size() == 0 ||
+							cur_Range.blobs.size() > 0 && MaxBlobExtentFromCurRangeAndToTheRight (ranges, cur_Range) <= clue_val)
+					{
+						throw new WeAreGoodException ("Last Range(s) are good enough for last clue!");
+					} else
+						throw new CanFitSolutionException ("Last Range(s)' blobs not good for last clue");
+				}
+
+				// let's see if there is room for the *next* clue if we
+				// take into account the space we need for *this* clue within
+				// the current Range
+				if (cur_Range.blobs.size() > 0)
+				{
+
+					// let's see if the first Blob is close enough to the
+					// start of the Range such that the Blob *must* be part of
+					// the current clue
+					Blob b = cur_Range.blobs.get(0);
+					int uncertainty = b.start - cur_Range.start;
+
+					// If Blob is bound to the current clue, but is larger
+					// than the current clue value, then we have a problem!
+					if (uncertainty < clue_val && b.GetLength() > clue_val)
+						throw new CanFitSolutionException ("Clue " + clue_idx + " is close enough to start of Blob, but Blob size is too big");
+
+					// Blob can be attached to current clue
+					if (uncertainty < clue_val)
+					{
+						// Fill in the squares with FILLED at this current guess_level
+						int count = 0;
+						int cell = cur_Range.start;
+						for (int idx=0; idx<clue_val; idx++)
+						{
+							assert (!temp_sqs[cell].IsEmpty());
+							if (!temp_sqs[cell].IsFilled())
+							{
+								temp_sqs[cell].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level, clue_idx);
+								count++;
+							}
+							cell++;
+						}
+						// Fill in one past with EMPTY at the current guess_level
+						if (cell < N)
+						{
+							if (temp_sqs[cell].IsFilled())
+								throw new CanFitSolutionException ("End of clue " + clue_idx + " cannot be set to EMPTY");
+							
+							if (!temp_sqs[cell].IsEmpty())
+							{
+								temp_sqs[cell].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level, clue_idx);
+								count++;
+							}
+						}											
+
+						// increment guess_level for the next clue (unless the clue
+						// was already set in the puzzle, i.e. we didn't have to fill
+						// in any new squares)
+						if (count > 0) guess_level++;
+
+						if (do_debug) {
+							System.out.println ("Blob (" + b.start + " " + b.end + ") is attached to clue index " + clue_idx +
+									" (" + clue_val + ") guess_level is " + guess_level);
+							System.out.println (DumpSquaresAndGuessLevels (temp_sqs, start_col));	
+							noop();
+						}
+
+						// Move on to the next clue
+						clue_idx++;
+
+						// Move to next start position
+						start_col = cell+1;
+						
+						// If we're on the last clue AND we have no more FILLED squares,
+						// then we're done
+						if (clue_idx >= Nclues)
+						{
+							if (CountFilledSquaresToRightFromIdx (temp_sqs, start_col) == 0)
+								throw new WeAreGoodException ("There are no more clues and no more filled squares to the right");
+							else
+								throw new CanFitSolutionException ("There are no more clues but there are filled squares to the right");
+						}
+											
+						// If we're at the end of the squares, then that's a problem, too
+						if (start_col >= N)
+							throw new CanFitSolutionException ("We have more clues to process, but we've run out of squares");						
+							
+						// If start of next valid range is beyond the end
+						// of the current Range, then move on to the next Range
+						if (start_col > cur_Range.end)
+						{
+							cur_range_idx++;
+
+							// If we don't have any more Ranges, then we have a problem
+							if (cur_range_idx == ranges.size())
+								throw new CanFitSolutionException ("We have more clues, but no more Ranges to process");
+
+							cur_Range = ranges.get(cur_range_idx);
+							start_col = cur_Range.start;
+						}
+
+					// no Blobs close enough to start of Range, so we assume that our current
+					// clue might be within this Range and then process the
+					// remaining clues in the remaining space
+					} else
+					{	
+						// let's fill in our clue here
+						int cell = cur_Range.start;
+						for (int idx=0; idx<clue_val; idx++)
+						{
+							assert (!temp_sqs[cell].IsEmpty());
+							if (!temp_sqs[cell].IsFilled())
+								temp_sqs[cell].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level, clue_idx);
+							cell++;
+						}
+						// and fill in an X at the end of the clue
+						if (cell < N)
+						{
+							if (temp_sqs[cell].IsFilled())
+								throw new CanFitSolutionException ("Cannot EMPTY end of clue");
+							if (!temp_sqs[cell].IsEmpty())
+								temp_sqs[cell].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
+						}
+						if (do_debug) {
+							System.out.println ("Fitting clue index " + clue_idx + " (" + clue_val + ") into available space");				
+							System.out.println (DumpSquaresAndGuessLevels (temp_sqs, start_col));
+							noop();
+						}
+
+						// Move on to the next clue and guess_level
+						clue_idx++;
+						guess_level++;
+
+						// Move to next start position
+						start_col = cell+1;
+						
+						// If we're on the last clue AND we have no more FILLED squares,
+						// then we're done
+						if (clue_idx >= Nclues)
+						{
+							if (CountFilledSquaresToRightFromIdx (temp_sqs, start_col) == 0)
+								throw new WeAreGoodException ("There are no more clues and no more filled squares to the right");
+							else
+								throw new CanFitSolutionException ("There are no more clues but there are filled squares to the right");
+						}
+					
+						// If we're at the end of the squares, then that's a problem, too
+						if (start_col >= N)
+							throw new CanFitSolutionException ("We have more clues to process, but we've run out of squares");						
+							
+						// If start of next valid range is beyond the end
+						// of the current Range, then move on to the next Range
+						if (start_col > cur_Range.end)
+						{
+							cur_range_idx++;
+
+							// If we don't have any more Ranges, then we have a problem
+							if (cur_range_idx == ranges.size())
+								throw new CanFitSolutionException ("We have more clues, but no more Ranges to process");
+
+							cur_Range = ranges.get(cur_range_idx);
+							start_col = cur_Range.start;
+						}						
+					}
+
+				// no Blobs in current Range, so we assume that our current
+				// clue might be within this Range and then process the
+				// remaining clues in the remaining space
+				} else
+				{
+					// let's fill in our clue here
+					int cell = cur_Range.start;
+					for (int idx=0; idx<clue_val; idx++)
+					{
+						assert (!temp_sqs[cell].IsEmpty());
+						if (!temp_sqs[cell].IsFilled())
+							temp_sqs[cell].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level, clue_idx);
+						cell++;
+					}
+					if (cell < N)
+					{
+						if (temp_sqs[cell].IsFilled())
+							throw new CanFitSolutionException ("Tried to put our clue in any empty Range, but end of clue is FILLED!");
+						if (!temp_sqs[cell].IsEmpty())
+							temp_sqs[cell].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
+					}
+					if (do_debug) {
+						System.out.println ("Fitting clue index " + clue_idx + " (" + clue_val + ") into available space");								
+						System.out.println (DumpSquaresAndGuessLevels (temp_sqs, start_col));
+						noop();
+					}
+
+					// Move on to the next clue and guess_level
+					clue_idx++;
+					guess_level++;
+
+					// Move to next start position
+					start_col = cell+1;
+
+					// If we're on the last clue AND we have no more FILLED squares,
+					// then we're done
+					if (clue_idx >= Nclues)
+					{
+						if (CountFilledSquaresToRightFromIdx (temp_sqs, start_col) == 0)
+							throw new WeAreGoodException ("There are no more clues and no more filled squares to the right");
+						else
+							throw new CanFitSolutionException ("There are no more clues but there are filled squares to the right");
+					}
+					
+					// If we're at the end of the squares, then that's a problem, too
+					if (start_col >= N)
+						throw new CanFitSolutionException ("We have more clues to process, but we've run out of squares");
+
+					// If start of next valid range is beyond the end
+					// of the current Range, then move on to the next Range
+					if (start_col > cur_Range.end)
+					{
+						cur_range_idx++;
+
+						// If we don't have any more Ranges, then we have a problem
+						if (cur_range_idx == ranges.size())
+							throw new CanFitSolutionException ("We have more clues, but no more Ranges to process");
+
+						cur_Range = ranges.get(cur_range_idx);
+						start_col = cur_Range.start;
+					}	
+				}
+			} // try
+		
+			// ----------------------------
+			// Solution works - we're done!
+			// ----------------------------
+			catch (WeAreGoodException cfse) {
+				return true;
+			} // catch WeAreGoodException (i.e. we're done)
+			// -------------------------
+			// Solution does not fit yet
+			// -------------------------
+			catch (CanFitSolutionException cfse) {
+				if (do_debug)
+				{
+					System.out.println ("Guess level: " + guess_level + "\nSolution doesn't fit because:\n" + cfse.getMessage());
+					noop();
+				}
+
+				// if we're at guess_level 1 and it didn't fit, then we're hosed
+				int keep_cell = -1;
+				int keep_clue_idx = -1;
+				if (guess_level > 0) {
+					// locate first *isolated* FILLED square at the current guess_level
+					while (keep_cell < 0 && guess_level > 0) {
+						for (int idx=0; idx<temp_sqs.length; idx++)
+							if (temp_sqs[idx].IsFilled() && temp_sqs[idx].GetGuessLevel() == guess_level)
+							{
+								// do not break up Blobs that are connected
+								int prior_idx = idx-1;
+								if (prior_idx < 0 || !temp_sqs[prior_idx].IsFilled())
+								{
+									keep_cell = idx;
+									keep_clue_idx = temp_sqs[idx].clue_index;
+									break;
+								}
+							}
+						if (keep_cell < 0) guess_level--;
+					}
+				}
+
+				// If we couldn't find an appropriate cell to EMPTY, then just
+				// start with the UNKNOWN squares at guess level 0
+				if (keep_cell < 0)
+				{
+					// locate first UNKNOWN square
+					for (int idx=0; idx<temp_sqs.length; idx++)
+						if (temp_sqs[idx].IsUnknown() && temp_sqs[idx].GetGuessLevel() == 0)
+						{
+							keep_cell = idx;
+							keep_clue_idx = 0;
+							break;
+						}	
+					guess_level = 1;
+				}
+
+				if (keep_cell < 0) return false;	// There is no more guess procesing to be done
+
+				// undo all of the squares that are at the current guess_level and above
+				// (as long as guess level is > 0)
+				for (int idx=keep_cell; idx<temp_sqs.length; idx++)
+				{
+					int gs = temp_sqs[idx].GetGuessLevel();
+					if (gs >= guess_level && gs > 0)
+						temp_sqs[idx].SetStatus(PuzzleSquare.SquareStatus.UNKNOWN, 0);
+				}
+				if (do_debug) {
+					System.out.println ("Undoing guess level >= " + guess_level);
+					System.out.println (DumpSquaresAndGuessLevels (temp_sqs, start_col));
+					noop();
+				}
+
+				// reduce our guess_level
+				guess_level--;
+				assert (guess_level >= 0);
+				assert (temp_sqs[keep_cell].IsUnknown());
+				temp_sqs[keep_cell].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
+				if (do_debug) {
+					System.out.println ("Setting " + keep_cell + " to EMPTY at guess_level " + (guess_level < 0 ? 0 : guess_level));
+					System.out.println (DumpSquaresAndGuessLevels (temp_sqs, start_col));
+					noop();
+				}
+
+				// now go back to our previous guess_level
+				guess_level++;
+
+				// reset the current clue_index to that which was associated
+				// with the blob we just removed
+				clue_idx = keep_clue_idx;
+
+				// also restart where we process our line from
+				start_col = keep_cell+1;
+
+				// if we're at the end of the line, we have a problem
+				if (start_col >= N) return false;	
+				
+			} // catch CanFitSolutionException		
+		}
+
+		return false;
+		
+	}
+	
+	public boolean CanSolutionFit (PBNPuzzle myPuzzle, boolean is_row, int row_or_col)
+	{
+		int N = is_row ? myPuzzle.GetCols() : myPuzzle.GetRows();
+		PuzzleSquare[] squares = new PuzzleSquare[N];
+		for (int i=0; i<N; i++)
+		{
+			if (is_row) squares[i] = myPuzzle.GetBackupPuzzleSquareAt(row_or_col, i);
+			else        squares[i] = myPuzzle.GetBackupPuzzleSquareAt(i, row_or_col);
+		}
+					
+		return CanSolutionFitStartingFromClue (myPuzzle, squares, is_row, row_or_col, 0, 0, 1);
+	}
+	
+	private ArrayList<Range> GetAllRangesInExtent (PuzzleSquare[] squares, int extent_start, int extent_end)
+	{
+		ArrayList<Range> range_list = new ArrayList();
+		assert (extent_start >= 0 && extent_end < squares.length);
+		
+		int start = extent_start;
+		int end   = extent_end;
+		boolean range_open = false;
+		for (int i=extent_start; i<=extent_end; i++)
+		{
+			// square is UNKNOWN or FILLED (so part of a Range)
+			if (squares[i].IsUnknown() || squares[i].IsFilled())
+			{
+				if (!range_open) start = i;
+				range_open = true;
+				end = i;
+				
+			} else // square is EMPTY (no longer in a Range)
+			{
+				if (range_open) 
+					range_list.add(new Range (start, end));
+				range_open = false;
+			}
+		}
+		if (range_open)
+			range_list.add(new Range (start, end));			
+		
+		return range_list;
+	}
+	
+	public boolean CanSolutionFitStartingFromClue (PBNPuzzle myPuzzle, 
+			PuzzleSquare[] squares, boolean is_row, int row_or_col, int start_col, int start_clue, int recursion_level)
+	{
+		if (is_row && row_or_col == 17)
+			System.out.println ("Recurse level " + recursion_level);
+		
+		// Get all Ranges starting from start_col to end
+		ArrayList<Range> ranges = GetAllRangesInExtent (squares, start_col, squares.length-1);
+		if (ranges.isEmpty()) return false;
+		
+		// For each Range, find the Blobs (if any) within each Range
+		for (Range r: ranges)
+			r.FindBlobsInRange (squares);
+		
+		// Set current Range
+		int cur_range_idx = 0;
+		Range cur_Range = ranges.get(cur_range_idx);
+		
+		// Keep track of the last Range in which we had some leeway to add a
+		// clue in the UNKNOWN spaces towards the beginning of the Range
+		Range last_leeway_Range = null;
+		
+		// helper vars
+		int Nclues;
+		if (is_row)
+			Nclues = myPuzzle.GetRow_NClues(row_or_col);
+		else
+			Nclues = myPuzzle.GetCol_NClues(row_or_col);
+		
+		// Loop over all clues from start_clue onwards
+		// The actual "looping" over clues happens recursively
+//		for (int clue_idx = start_clue; clue_idx < Nclues; clue_idx++)
+//		{
+			int clue_idx = start_clue;
+			int clue_val;
+			if (is_row)
+				clue_val = myPuzzle.GetRow_Clues(row_or_col, clue_idx);
+			else
+				clue_val = myPuzzle.GetCol_Clues(row_or_col, clue_idx);
+			int cur_col = start_col;
+			
+			boolean it_fits = false;
+			
+			boolean keep_processing_current_clue = true;
+			while (keep_processing_current_clue)
+			{
+				int range_len = cur_Range.GetLength();
+
+				// current range is too small for current clue
+				if (range_len < clue_val)
+				{
+					// if the current Range has a Blob, then we have a problem
+					if (!cur_Range.blobs.isEmpty()) return false;
+
+					// otherwise we can just skip this empty Range
+					cur_range_idx++;
+					
+					// if we've run out of Ranges, then we have a problem
+					if (cur_range_idx == ranges.size()) return false;
+					
+					// otherwise just get the next Range and try and process the
+					// current clue again
+					cur_Range = ranges.get(cur_range_idx);
+
+				// current clue *could* fit in current range
+				} else
+				{
+					// if we're at the last clue, then we're done!
+					if (clue_idx == Nclues-1) return true;
+					
+					// let's see if there is room for the *next* clue if we
+					// take into account the space we need for *this* clue within
+					// the current Range
+					if (cur_Range.blobs.size() > 0)
+					{
+						
+						// let's see if the first Blob is close enough to the
+						// start of the Range such that the Blob *must* be part of
+						// the current clue
+						Blob b = cur_Range.blobs.get(0);
+						int uncertainty = b.start - cur_Range.start;
+						
+						// If Blob is bound to the current clue, but is larger
+						// than the current clue value, then we have a problem!
+						if (uncertainty < clue_val && b.GetLength() > clue_val) return false;
+						
+						// Blob is bound to current clue
+						if (uncertainty < clue_val)
+						{
+							// So we can move on to the next clue
+							int next_clue_idx = clue_idx + 1;
+							assert (next_clue_idx < Nclues);
+							
+							// We can also move on to processing a smaller
+							// extent to the right which doesn't include the
+							// blob associated with the clue_idx
+//							int next_cur_col = b.end+2;
+							int next_cur_col = cur_Range.start+clue_val+1;
+							
+							// If start of next valid range is beyond the end
+							// of the current Range, then move on to the next Range
+							if (next_cur_col > cur_Range.end)
+							{
+								cur_range_idx++;
+								
+								// If we don't have any more Ranges, then we have a problem
+								if (cur_range_idx == ranges.size()) return false;
+								
+								cur_Range = ranges.get(cur_range_idx);
+								next_cur_col = cur_Range.start;
+							}
+							
+							keep_processing_current_clue = false;
+							it_fits = CanSolutionFitStartingFromClue (myPuzzle, squares, is_row, row_or_col, next_cur_col, next_clue_idx, recursion_level+1);
+							if (it_fits) return true;
+
+							
+						// no Blobs close enough to start of Range, so we assume that our current
+						// clue might be within this Range and then process the
+						// remaining clues in the remaining space
+						} else
+						{							
+							// THIS APPROACH IS WAY TOO SLOW DUE TO MUCH RECURSION REQUIRED
+							// LYNNE!!!!
+							int next_cur_col = start_col + clue_val + 2;
+							
+							// If start of next valid range is beyond the end
+							// of the current Range, then move on to the next Range
+							if (next_cur_col > cur_Range.end)
+							{
+								cur_range_idx++;
+								
+								// If we don't have any more Ranges, then we have a problem
+								if (cur_range_idx == ranges.size()) return false;
+								
+								cur_Range = ranges.get(cur_range_idx);
+								next_cur_col = cur_Range.start;
+							} else
+								last_leeway_Range = cur_Range;	// There was enough empty space at
+																// beginning of this Range for the curent clue
+							
+							// Move to next clue
+							int next_clue_idx = clue_idx + 1;
+							assert (next_clue_idx < Nclues);
+							
+							keep_processing_current_clue = false;							
+							it_fits = CanSolutionFitStartingFromClue (myPuzzle, squares, is_row, row_or_col, next_cur_col, next_clue_idx, recursion_level+1);							
+							if (it_fits) return true;
+						}
+						
+					// no Blobs in current Range, so we assume that our current
+					// clue might be within this Range and then process the
+					// remaining clues in the remaining space
+					} else
+					{
+						last_leeway_Range = cur_Range;	// no Blobs in this Range
+						
+						int next_cur_col = start_col + clue_val + 2;
+
+						// If start of next valid range is beyond the end
+						// of the current Range, then move on to the next Range
+						if (next_cur_col > cur_Range.end)
+						{
+							cur_range_idx++;
+
+							// If we don't have any more Ranges, then we have a problem
+							if (cur_range_idx == ranges.size()) return false;
+
+							cur_Range = ranges.get(cur_range_idx);
+							next_cur_col = cur_Range.start;
+						}
+
+						// Move to next clue
+						int next_clue_idx = clue_idx + 1;
+						assert (next_clue_idx < Nclues);
+
+						keep_processing_current_clue = false;
+						it_fits = CanSolutionFitStartingFromClue (myPuzzle, squares, is_row, row_or_col, next_cur_col, next_clue_idx, recursion_level+1);													
+						if (it_fits) return true;
+					}
+				}
+			}
+				
+			// If it doesn't fit yet, let's see if we have some leeway so
+			// we can make our search range starter a little smaller
+			while (!it_fits)
+			{					
+				if (last_leeway_Range != null)
+				{
+					cur_col = last_leeway_Range.start + 1;
+					if (cur_col == squares.length) return false;
+					if (cur_col > last_leeway_Range.end)
+					{
+						cur_range_idx = ranges.indexOf(last_leeway_Range) + 1;
+						if (cur_range_idx == ranges.size()) return false;
+						cur_Range = ranges.get(cur_range_idx);
+						cur_col = cur_Range.start;
+
+						last_leeway_Range = null;
+						if (cur_Range.blobs.isEmpty()) last_leeway_Range = cur_Range;
+						else
+						{
+							Blob b = cur_Range.blobs.get(0);
+							if (b.start - cur_Range.start > clue_val + 1)
+								last_leeway_Range = cur_Range;
+						}
+					}
+
+					it_fits = CanSolutionFitStartingFromClue (myPuzzle, squares, is_row, row_or_col, cur_col, clue_idx, recursion_level+1);													
+					if (it_fits) return true;	
+				} else return false;			
+			}
+//		}
+		return false;
+	}
+	
+	private static int CountFilledSquaresToRightFromIdx (PuzzleSquare[] sqs, int start_col)
+	{
+		if (start_col >= sqs.length) return 0;
+		int count = 0;
+		for (int i=start_col; i<sqs.length; i++)
+			if (sqs[i].IsFilled()) count++;
+		return count;
+	}
+	
+	private static int MaxBlobExtentFromCurRangeAndToTheRight (ArrayList<Range> ranges, Range cur_range)
+	{
+		if (ranges.isEmpty()) return 0;
+		
+		int ridx = ranges.indexOf(cur_range);
+		
+		int Nranges = ranges.size();
+
+		int start_blob = -1;
+		int end_blob = -1;		
+		
+		for (int ir=ridx; ir<Nranges; ir++)
+		{
+			Range r = ranges.get(ir);
+			for (Blob b : r.blobs)
+			{
+				if (start_blob < 0 || b.start < start_blob) start_blob = b.start;
+				if (end_blob   < 0 || b.end   > end_blob  ) end_blob   = b.end;
+			}
+		}
+		return end_blob - start_blob + 1;
+	}
+	
+	// No-operation!  Just gives me something I can stop the debugger at
+	private static void noop ()
+	{ }
+
 }
