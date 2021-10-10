@@ -59,7 +59,7 @@ public class PuzzleSolverThread extends Thread {
 	public boolean GetAutoStop ()
 	{ return auto_stop; }
 
-    private void RedrawFrame ()
+    public void RedrawFrame ()
     {
         if (frameToRedraw != null) frameToRedraw.repaint();
     }
@@ -146,33 +146,18 @@ public class PuzzleSolverThread extends Thread {
 			// BEGINNING OF NEW SOLVER CODE
 			// ----------------------------
 			
-			boolean keep_processing = true;
-			BetterPuzzleSolver solver = new BetterPuzzleSolver();
-			while (keep_processing && !do_stop)
-			{
-				System.out.println ("ProcessPuzzle...");
-                int prev_num_knowns = puzzleToSolve.CountKnownSquares();
-                success = solver.ProcessPuzzle (puzzleToSolve, guess_level);
-                int num_knowns = puzzleToSolve.CountKnownSquares();
-                RedrawFrame();
-                if (success && (prev_num_knowns != num_knowns))
-				{
-					System.out.println ("CheckPuzzleSoFar...");
-                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
-				}
-
-                keep_processing = success && (prev_num_knowns != num_knowns);				
-			}
-			
+//			BetterPuzzleSolver solver = new BetterPuzzleSolver (this);				
+			BetterPuzzleSolver solver = new BetterPuzzleSolver ();	
+				
             // Edge processing
-            boolean keep_edge_processing = keep_processing;
+            boolean keep_edge_processing = true;
             while (keep_edge_processing && !do_stop)
             {
 				System.out.println ("ProcessEdges...");
                 int prev_num_knowns = puzzleToSolve.CountKnownSquares();
                 success = PuzzleSolver.ProcessEdges (puzzleToSolve, guess_level, false);
                 int num_knowns = puzzleToSolve.CountKnownSquares();
-                RedrawFrame();
+                RedrawFrame();				
                 if (success && (prev_num_knowns != num_knowns))
 				{
 					System.out.println ("CheckPuzzleSoFar...");
@@ -181,6 +166,24 @@ public class PuzzleSolverThread extends Thread {
 
                 keep_edge_processing = success && (prev_num_knowns != num_knowns);
             }
+
+			// Process from possible solutions
+			boolean keep_processing = true;
+			while (keep_processing && !do_stop)
+			{
+				System.out.println ("Process with smarter solver...");
+                int prev_num_knowns = puzzleToSolve.CountKnownSquares();
+                success = solver.ProcessPuzzle(puzzleToSolve, guess_level);
+                int num_knowns = puzzleToSolve.CountKnownSquares();
+                RedrawFrame();
+                if (success && (prev_num_knowns != num_knowns))
+				{
+					System.out.println ("CheckPuzzleSoFar...");
+                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+				}
+
+                keep_processing = success && (prev_num_knowns != num_knowns);
+ 			}
 			
 			}			
 

@@ -1304,6 +1304,7 @@ public class PBNHandler implements Printable {
 
     public void HandleCheckPuzzleFromPopup (Point pt, boolean forward)
     {
+		// LYNNE!! must change this to new Better_CanSolutionFit
         boolean success = true;
         PuzzleSolver.InitializeLastMessage();
 		if (col_clue_rect.contains(pt))

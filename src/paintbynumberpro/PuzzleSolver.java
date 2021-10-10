@@ -12,7 +12,7 @@ import java.awt.*;
  *
  * @author user
  */
-public class PuzzleSolver {
+public class PuzzleSolver extends Thread {
 
     private static final String title = "Check Puzzle";
     private static final String UNKNOWN_ERROR = "Unknown error";
@@ -212,7 +212,10 @@ public class PuzzleSolver {
     // Code to check puzzle solution or status so far
     // ----------------------------------------------
 
-    public static boolean CheckPuzzleSoFar (PBNPuzzle myPuzzle, boolean for_solver)
+	public static boolean CheckPuzzleSoFar (PBNPuzzle myPuzzle, boolean for_solver)
+	{ return CheckPuzzleSoFar (myPuzzle, for_solver, null); }
+	
+    public static boolean CheckPuzzleSoFar (PBNPuzzle myPuzzle, boolean for_solver, PuzzleSolverThread theThread)
     {
         // Note: If the auto-solver is running (i.e. for_solver is TRUE), then
         // we don't want to see the error messages
@@ -221,7 +224,7 @@ public class PuzzleSolver {
         if (myPuzzle == null) return false;
         last_msg = UNKNOWN_ERROR;
 		
-		BetterPuzzleSolver bps = new BetterPuzzleSolver();
+		BetterPuzzleSolver bps = new BetterPuzzleSolver(theThread);
 
         // Check rows first
         for (int r=0; r<myPuzzle.GetRows(); r++)
@@ -230,6 +233,8 @@ public class PuzzleSolver {
             {
                 if (!for_solver && last_msg != null)
                     PaintByNumberPro.HandleErrorMessage (title, last_msg);
+				else
+					System.out.println ("Error in row " + r);
                 return false;
             }
         }
@@ -240,6 +245,8 @@ public class PuzzleSolver {
             {
                 if (!for_solver && last_msg != null)
                     PaintByNumberPro.HandleErrorMessage (title, last_msg);
+				else
+					System.out.println ("Error in col " + c);
                 return false;
             }
 
@@ -556,7 +563,7 @@ public class PuzzleSolver {
             for (int rr=cur_row; rr<=slop && !found_filled && !its_possible; rr++)
             {
                 if (myCol[rr].IsFilled()) found_filled = true;
-				BetterPuzzleSolver bps = new BetterPuzzleSolver();
+				BetterPuzzleSolver bps = new BetterPuzzleSolver(null);
 				its_possible = bps.CanSolutionFitStartingFromClue(myPuzzle, myCol, false, col, rr, 0, 1);				
 //                if (CanSolutionFitInColStartingFromClue(myPuzzle, myCol, col, rr, 0, verbose) == BType.TRUE) its_possible = true;
             }
@@ -646,7 +653,7 @@ public class PuzzleSolver {
                 if (myRow[cc].IsFilled()) found_filled = true;
 				if (!myRow[cc].IsEmpty())	// Move on until we get to a new UNKNOWN or FILLED square
 				{
-					BetterPuzzleSolver bps = new BetterPuzzleSolver();
+					BetterPuzzleSolver bps = new BetterPuzzleSolver(null);
 					its_possible = bps.CanSolutionFitStartingFromClue(myPuzzle, myRow, true, row, cc, 0, 1);
 //					if (CanSolutionFitInRowStartingFromClue(myPuzzle, myRow, row, cc, 0, verbose, 1) == BType.TRUE) its_possible = true;
 
