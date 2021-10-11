@@ -534,9 +534,9 @@ public class BetterPuzzleSolver {
 			}
 						
 			// This is temporarily added in for debugging
-			if (do_debug && !PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true))
+			if (do_debug && something_changed && !PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true))
 			{
-				System.out.println ("Puzzle check failed after row " + row + "\n");
+				System.out.println ("Puzzle check failed after row " + row + ":\n");
 				System.out.println ("Clues:");
 				System.out.println (DumpCluesOneLine (clues));
 				System.out.println ("Old squares:");
@@ -544,7 +544,8 @@ public class BetterPuzzleSolver {
 				System.out.println ("New squares:");
 				System.out.println (DumpSquares(squares));
 				noop();
-				ProcessLine_Better (clues, save_sqs, guess_level, true, row, true);				
+				// Uncomment the next line for detailed debugging
+//				ProcessLine_Better (clues, save_sqs, guess_level, true, row, true);				
 				return false;
 			}
 			
@@ -590,9 +591,9 @@ public class BetterPuzzleSolver {
 			}
 			
 			// This is temporarily added in for debugging
-			if (do_debug && !PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true))
+			if (do_debug && something_changed && !PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true))
 			{
-				System.out.println ("Puzzle check failed after column " + col);
+				System.out.println ("Puzzle check failed after column " + col + ":\n");
 				System.out.println ("Clues:");
 				System.out.println (DumpCluesOneLine (clues));				
 				System.out.println ("Old squares:");
@@ -600,7 +601,8 @@ public class BetterPuzzleSolver {
 				System.out.println ("New squares:");
 				System.out.println (DumpSquares(squares));				
 				noop();
-				ProcessLine_Better (clues, save_sqs, guess_level, true, col, true);					
+				// Uncomment the next line for detailed debugging
+//				ProcessLine_Better (clues, save_sqs, guess_level, true, col, true);					
 				return false;
 			}
 		}
@@ -656,10 +658,16 @@ public class BetterPuzzleSolver {
 	// ------------------------------------------------------------------------
 	
 	private PuzzleSquare[] ProcessLine_Better (int[] clues, PuzzleSquare[] squares, int guess_level,
-			boolean is_row, int num, boolean do_debug)
+			boolean is_row, int num, boolean debug)
 	{
-//		PuzzleSquare[] orig_squares = new PuzzleSquare[squares.length];
-//		for (int i=0; i<orig_squares.length; i++) orig_squares[i] = new PuzzleSquare(squares[i]);
+		// debug is going to be ignored for now because the calling code
+		// will provide the high level before/after picture to stdout, which
+		// should be enough.  Any more complicated debugging has to be done
+		// by setting do_debug here to true for whatever row or column is
+		// causing the problem.
+		
+		boolean do_debug = false;	// This is for more detailed debugging
+		boolean high_level_debug = false;	// This is for a before/after picture
 		
 		// -----------------------------------------------------
 		// Pre-Check: Make sure there is something for us to do!
@@ -672,8 +680,6 @@ public class BetterPuzzleSolver {
 		// --------------------------------------------------------------
 		// If there are still some UNKNOWNs in our squares, then carry on
 		// --------------------------------------------------------------
-		
-		boolean high_level_debug = false;
 		
 		// Number of squares
 		int N = squares.length;
