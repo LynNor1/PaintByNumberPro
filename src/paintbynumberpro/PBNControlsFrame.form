@@ -355,6 +355,7 @@
         <Component class="javax.swing.JCheckBox" name="Debug_JCheckBox">
           <Properties>
             <Property name="text" type="java.lang.String" value="Debug"/>
+            <Property name="toolTipText" type="java.lang.String" value="Puzzle is checked after each row or col is processed - slow!"/>
             <Property name="enabled" type="boolean" value="false"/>
           </Properties>
           <Events>

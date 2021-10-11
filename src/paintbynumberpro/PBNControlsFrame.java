@@ -456,6 +456,7 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
         });
 
         Debug_JCheckBox.setText("Debug");
+        Debug_JCheckBox.setToolTipText("Puzzle is checked after each row or col is processed - slow!");
         Debug_JCheckBox.setEnabled(false);
         Debug_JCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

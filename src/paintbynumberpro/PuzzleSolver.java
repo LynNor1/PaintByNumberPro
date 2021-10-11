@@ -233,8 +233,8 @@ public class PuzzleSolver extends Thread {
             {
                 if (!for_solver && last_msg != null)
                     PaintByNumberPro.HandleErrorMessage (title, last_msg);
-				else
-					System.out.println ("Error in row " + r);
+//				else
+//					System.out.println ("Error in row " + r);
                 return false;
             }
         }
@@ -245,8 +245,8 @@ public class PuzzleSolver extends Thread {
             {
                 if (!for_solver && last_msg != null)
                     PaintByNumberPro.HandleErrorMessage (title, last_msg);
-				else
-					System.out.println ("Error in col " + c);
+//				else
+//					System.out.println ("Error in col " + c);
                 return false;
             }
 

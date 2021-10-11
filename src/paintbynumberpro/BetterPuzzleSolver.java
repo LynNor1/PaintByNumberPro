@@ -487,14 +487,13 @@ public class BetterPuzzleSolver {
 	// Primary puzzle solving "loop":
 	// Process all rows first, then process all columns
 	// ------------------------------------------------
-	public boolean ProcessPuzzle (PBNPuzzle myPuzzle, int guess_level)
+	public boolean ProcessPuzzle (PBNPuzzle myPuzzle, int guess_level, boolean do_debug)
 	{
 		int rows = myPuzzle.GetRows();
 		int cols = myPuzzle.GetCols();
 		
 		boolean abort_after_cols = false;
 		boolean abort_after_rows = false;
-		boolean do_debug = false;
 		
 		// ----------------------------
 		// Loop over all rows to bottom

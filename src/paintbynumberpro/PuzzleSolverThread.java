@@ -173,7 +173,7 @@ public class PuzzleSolverThread extends Thread {
 			{
 //				System.out.println ("Process with smarter solver...");
                 int prev_num_knowns = puzzleToSolve.CountKnownSquares();
-                success = solver.ProcessPuzzle(puzzleToSolve, guess_level);
+                success = solver.ProcessPuzzle(puzzleToSolve, guess_level, debug);
                 int num_knowns = puzzleToSolve.CountKnownSquares();
                 RedrawFrame();
                 if (success && (prev_num_knowns != num_knowns))
