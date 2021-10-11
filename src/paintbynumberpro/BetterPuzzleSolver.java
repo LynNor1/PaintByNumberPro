@@ -518,7 +518,7 @@ public class BetterPuzzleSolver {
 					save_sqs[i] = new PuzzleSquare (squares[i]);
 			}
 			
-			System.out.println ("Processing row " + row);
+//			System.out.println ("Processing row " + row);
 			
 			// Process this row
 			ProcessLine_Better (clues, squares, guess_level, true, row, false);
@@ -574,7 +574,7 @@ public class BetterPuzzleSolver {
 					save_sqs[i] = new PuzzleSquare (squares[i]);
 			}
 			
-			System.out.println ("Processing col " + col);
+//			System.out.println ("Processing col " + col);
 			
 			// Process this column
 			ProcessLine_Better (clues, squares, guess_level, false, col, false);
@@ -896,17 +896,15 @@ public class BetterPuzzleSolver {
 								int cell = b.start-1;
 								if (cell >= 0)
 								{
-									if (squares[cell].IsFilled())
-										noop();
 									assert (!squares[cell].IsFilled());
-									if (!squares[cell].IsEmpty())
+									if (squares[cell].IsUnknown())
 										squares[cell].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
 								}
 								cell = b.end+1;
 								if (cell < N)
 								{
 									assert (!squares[cell].IsFilled());
-									if (!squares[cell].IsEmpty())
+									if (squares[cell].IsUnknown())
 										squares[cell].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
 								}
 								cl.SetBlob(b.start, b.end);					
@@ -1139,8 +1137,11 @@ public class BetterPuzzleSolver {
 					if (b instanceof AntiBlob && b.is_anchored_start && b.is_anchored_end)
 					{
 						for (int is=b.start; is<=b.end; is++)
-							if (!squares[is].IsEmpty())
+							if (squares[is].IsUnknown())
+							{
+								assert (!squares[is].IsFilled());
 								squares[is].SetStatus (PuzzleSquare.SquareStatus.EMPTY, guess_level);
+							}
 						if (do_debug)
 						{
 							System.out.println ("Clearing AntiBlob " + b.start + " " + b.end 
@@ -1904,8 +1905,11 @@ public class BetterPuzzleSolver {
 								for (int ii=0; ii<temp_val; ii++)
 								{
 									int cell = start_ab+uncertainty+ii;
-									if (!squares[cell].IsFilled())
+									if (squares[cell].IsUnknown())
+									{
+										assert (!squares[cell].IsEmpty());
 										squares[cell].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level);
+									}
 								}
 								myClue.SetBlob (start_ab+uncertainty, start_ab+uncertainty+temp_val-1);
 								if (uncertainty == 0)
@@ -2021,8 +2025,11 @@ public class BetterPuzzleSolver {
 										if (squares[cell].IsFilled()) is_filling = true;
 										else if (is_filling)
 										{
-											if (!squares[cell].IsFilled())
+											if (squares[cell].IsUnknown())
+											{
+												assert (!squares[cell].IsEmpty());
 												squares[cell].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level);
+											}
 										}
 										cell++;
 									}
@@ -2070,8 +2077,11 @@ public class BetterPuzzleSolver {
 										if (squares[cell].IsFilled()) is_filling = true;
 										else if (is_filling)
 										{
-											if (!squares[cell].IsFilled())
+											if (squares[cell].IsUnknown())
+											{
+												assert (!squares[cell].IsEmpty());
 												squares[cell].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level);
+											}
 										}
 										cell--;
 									}
@@ -2199,8 +2209,9 @@ public class BetterPuzzleSolver {
 			int cell = cl.start_extent + ext_uncertainty;
 			for (int i=0; i<temp_val; i++)
 			{
-				if (!squares[cell].IsFilled())
+				if (squares[cell].IsUnknown())
 				{
+					assert (!squares[cell].IsEmpty());
 					squares[cell].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level);
 					something_changed = true;
 				}
@@ -2228,8 +2239,9 @@ public class BetterPuzzleSolver {
 			{
 				for (int i=bend+1; i<b.start; i++)
 				{
-					if (!squares[i].IsFilled())
+					if (squares[i].IsUnknown())
 					{
+						assert (!squares[i].IsEmpty());
 						squares[i].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level);
 						something_changed = true;
 					}
@@ -2241,8 +2253,11 @@ public class BetterPuzzleSolver {
 			{
 				for (int i=b.end+1; i<bstart; i++)
 				{
-					if (!squares[i].IsFilled())
-						squares[i].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level);					
+					if (squares[i].IsUnknown())
+					{
+						assert (!squares[i].IsEmpty());
+						squares[i].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level);	
+					}
 				}
 				// now bstart is b.start
 			}
@@ -2307,6 +2322,7 @@ public class BetterPuzzleSolver {
 				int cell = start_cell;
 				for (int i=0; i<cl.value; i++)
 				{
+					if (cell < 0 || cell >= N) break;
 					if (!is_filling && squares[cell].IsFilled()) 
 					{
 						is_filling = true;
@@ -2315,8 +2331,9 @@ public class BetterPuzzleSolver {
 					}
 					else if (is_filling)
 					{
-						if (!squares[cell].IsFilled())
+						if (squares[cell].IsUnknown())
 						{
+							assert (!squares[cell].IsEmpty());
 							squares[cell].SetStatus (PuzzleSquare.SquareStatus.FILLED, guess_level);
 							something_changed = true;
 						}
@@ -2362,6 +2379,7 @@ public class BetterPuzzleSolver {
 				int cell = start_cell;
 				for (int i=0; i<cl.value; i++)
 				{
+					if (cell < 0 || cell >= N) break;
 					if (!is_filling && squares[cell].IsFilled()) 
 					{
 						is_filling = true;
@@ -2370,8 +2388,9 @@ public class BetterPuzzleSolver {
 					}
 					else if (is_filling)
 					{
-						if (!squares[cell].IsFilled())
+						if (squares[cell].IsUnknown())
 						{
+							assert (!squares[cell].IsEmpty());
 							squares[cell].SetStatus (PuzzleSquare.SquareStatus.FILLED, guess_level);
 							something_changed = true;
 						}
@@ -2430,8 +2449,9 @@ public class BetterPuzzleSolver {
 						}
 						else if (is_filling)
 						{
-							if (!squares[cell].IsFilled())
+							if (squares[cell].IsUnknown())
 							{
+								assert (!squares[cell].IsEmpty());
 								squares[cell].SetStatus (PuzzleSquare.SquareStatus.FILLED, guess_level);
 								something_changed = true;
 							}
@@ -2492,8 +2512,9 @@ public class BetterPuzzleSolver {
 						}
 						else if (is_filling)
 						{
-							if (!squares[cell].IsFilled())
+							if (squares[cell].IsUnknown())
 							{
+								assert (!squares[cell].IsEmpty());
 								squares[cell].SetStatus (PuzzleSquare.SquareStatus.FILLED, guess_level);
 								something_changed = true;
 							}
@@ -2516,11 +2537,17 @@ public class BetterPuzzleSolver {
 		// uncertainty is 0
 		} else if (uncertainty == 0) {
 			int cell = b.start-1;
-			if (cell >= 0 && !squares[cell].IsEmpty())
+			if (cell >= 0 && squares[cell].IsUnknown())
+			{
+				assert (!squares[cell].IsFilled());
 				squares[cell].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
+			}
 			cell = b.end+1;
-			if (cell < squares.length && !squares[cell].IsEmpty())
-				squares[cell].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);			
+			if (cell < squares.length && squares[cell].IsUnknown())
+			{
+				assert (!squares[cell].IsFilled());
+				squares[cell].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);	
+			}
 		}
 		
 		// Check if extents have changed
@@ -2644,14 +2671,16 @@ public class BetterPuzzleSolver {
 	{
 		boolean something_changed = false;
 		int idx = blob_start-1;
-		if (idx >= 0 && !squares[idx].IsEmpty())
+		if (idx >= 0 && squares[idx].IsUnknown())
 		{
+			assert (!squares[idx].IsFilled());
 			squares[idx].SetStatus (PuzzleSquare.SquareStatus.EMPTY, guess_level);
 			something_changed = true;
 		}
 		idx = blob_end+1;
-		if (idx < squares.length && !squares[idx].IsEmpty())
+		if (idx < squares.length && squares[idx].IsUnknown())
 		{
+			assert (!squares[idx].IsFilled());
 			something_changed = true;
 			squares[idx].SetStatus (PuzzleSquare.SquareStatus.EMPTY, guess_level);
 		}
@@ -3025,12 +3054,12 @@ public class BetterPuzzleSolver {
 				if (myClue.value == blob_len)
 				{
 					myClue.SetFixed (b.start, b.end);
-					if (b.start > 0 && !squares[b.start-1].IsEmpty())
+					if (b.start > 0 && squares[b.start-1].IsUnknown())
 					{
 						assert (!squares[b.start-1].IsFilled());
 						squares[b.start-1].SetStatus (PuzzleSquare.SquareStatus.EMPTY, guess_level);
 					}
-					if (b.end < squares.length-1 && !squares[b.end+1].IsEmpty())
+					if (b.end < squares.length-1 && squares[b.end+1].IsUnknown())
 					{
 						assert (!squares[b.end+1].IsFilled());						
 						squares[b.end+1].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
@@ -3166,7 +3195,7 @@ public class BetterPuzzleSolver {
 					for (int j=0; j<temp_val; j++)
 					{
 						int cell = j+uncertainty+myClue.min_extent+r.start;
-						if (!squares[cell].IsFilled())
+						if (squares[cell].IsUnknown())
 						{
 							assert (!squares[cell].IsEmpty());
 							squares[cell].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level);
@@ -3196,7 +3225,7 @@ public class BetterPuzzleSolver {
 			int edge = myClue.min_extent - 1;
 			for (int i=0; i<edge; i++)
 			{
-				if (!squares[i].IsEmpty())
+				if (squares[i].IsUnknown())
 				{
 					assert (!squares[i].IsFilled());
 					squares[i].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
@@ -3215,7 +3244,7 @@ public class BetterPuzzleSolver {
 				if (edge_end-edge_start >= 0)
 				{
 					for (int j=edge_start; j<=edge_end; j++)
-					if (!squares[j].IsEmpty())
+					if (squares[j].IsUnknown())
 					{
 						assert (!squares[j].IsFilled());
 						squares[j].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);	
@@ -3230,7 +3259,7 @@ public class BetterPuzzleSolver {
 			int edge = myClue.max_extent+1;
 			for (int i=edge; i<squares.length; i++)
 			{
-				if (!squares[i].IsEmpty())
+				if (squares[i].IsUnknown())
 				{
 					assert (!squares[i].IsFilled());
 					squares[i].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
@@ -3468,14 +3497,14 @@ public class BetterPuzzleSolver {
 					if (uncertainty == 0 && is_unique)
 					{
 						int cell = b.start-1;
-						if (cell >= 0 && !squares[cell].IsEmpty())
+						if (cell >= 0 && squares[cell].IsUnknown())
 						{
 							num_changed++;
 							assert (!squares[cell].IsFilled());
 							squares[cell].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
 						}
 						cell = b.end+1;
-						if (cell < squares.length && !squares[cell].IsEmpty())
+						if (cell < squares.length && squares[cell].IsUnknown())
 						{
 							num_changed++;
 							assert (!squares[cell].IsFilled());
@@ -3501,7 +3530,7 @@ public class BetterPuzzleSolver {
 								int cell = start+i;
 								if (squares[cell].IsFilled())
 									start_filling = true;
-								if (start_filling && !squares[cell].IsFilled())
+								if (start_filling && squares[cell].IsUnknown())
 								{
 									num_changed++;
 									assert (!squares[cell].IsEmpty());
@@ -3520,7 +3549,7 @@ public class BetterPuzzleSolver {
 								int cell = start-i;
 								if (squares[cell].IsFilled())
 									start_filling = true;
-								if (start_filling && !squares[cell].IsFilled())
+								if (start_filling && squares[cell].IsUnknown())
 								{
 									num_changed++;
 									assert (!squares[cell].IsEmpty());
@@ -3589,8 +3618,11 @@ public class BetterPuzzleSolver {
 						}
 //						if (squares[cell].IsFilled()) return null;	// This should NOT happen
 						assert (!squares[cell].IsFilled());
-						if (!squares[cell].IsFilled())
+						if (squares[cell].IsUnknown())
+						{
+							assert (!squares[cell].IsFilled());
 							squares[cell].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
+						}
 					}
 				}
 			}
@@ -3610,7 +3642,7 @@ public class BetterPuzzleSolver {
 					for (int i=0; i<temp_val; i++)
 					{
 						int cell = uncertainty+i+r.start;
-						if (!squares[cell].IsFilled())
+						if (squares[cell].IsUnknown())
 						{
 							num_changed++;
 							assert (!squares[cell].IsEmpty());
@@ -3635,7 +3667,7 @@ public class BetterPuzzleSolver {
 				{
 					for (int cell=first_cell_filled; cell<=last_cell_filled; cell++)
 					{
-						if (!squares[cell].IsFilled())
+						if (squares[cell].IsUnknown())
 						{
 							num_changed++;
 							assert (!squares[cell].IsEmpty());
@@ -3654,7 +3686,7 @@ public class BetterPuzzleSolver {
 						int cell = last_cell_filled+uncertainty+1;
 						while (cell <= r.end)
 						{
-							if (!squares[cell].IsEmpty())
+							if (squares[cell].IsUnknown())
 							{
 								num_changed++;
 								assert (!squares[cell].IsFilled());
@@ -3665,7 +3697,7 @@ public class BetterPuzzleSolver {
 						cell = first_cell_filled-uncertainty-1;
 						while (cell >= r.start)
 						{
-							if (!squares[cell].IsEmpty())
+							if (squares[cell].IsUnknown())
 							{
 								num_changed++;
 								assert (!squares[cell].IsFilled());
@@ -4231,7 +4263,7 @@ public class BetterPuzzleSolver {
 						{
 							int cell = j+i-r.start;
 							assert (cell <= r.end);
-							if (!range_squares[cell].IsFilled())
+							if (range_squares[cell].IsUnknown())
 							{
 								num_changed++;	// Since we're operating on a *copy* of the puzzle,
 												// this shouldn't matter
