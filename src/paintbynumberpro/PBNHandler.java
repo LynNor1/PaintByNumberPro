@@ -1274,48 +1274,20 @@ public class PBNHandler implements Printable {
         return row_clue;
     }
 
-    public void LockFromPopup (Point pt)
-    {
-        // Get clue selected at this point
-        Point col_clue = GetColClueSelectedAtPoint (pt);
-        Point row_clue = GetRowClueSelectedAtPoint (pt);
-		if (col_clue != null)
-            myPuzzle.HandleLockColClue (col_clue.x, col_clue.y);
-		else
-
-		// check if in row clues
-		if (row_clue != null)
-            myPuzzle.HandleLockRowClue(row_clue.x, row_clue.y);
-    }
-
-    public void UnlockFromPopup (Point pt)
-    {
-        // Get clue selected at this point
-        Point col_clue = GetColClueSelectedAtPoint (pt);
-        Point row_clue = GetRowClueSelectedAtPoint (pt);
-		if (col_clue != null)
-            myPuzzle.HandleUnlockColClue (col_clue.x, col_clue.y);
-		else
-
-		// check if in row clues
-		if (row_clue != null)
-            myPuzzle.HandleUnlockRowClue(row_clue.x, row_clue.y);
-    }
-
     public void HandleCheckPuzzleFromPopup (Point pt, boolean forward)
     {
-		// LYNNE!! must change this to new Better_CanSolutionFit
+		BetterPuzzleSolver bps = new BetterPuzzleSolver();
         boolean success = true;
         PuzzleSolver.InitializeLastMessage();
 		if (col_clue_rect.contains(pt))
 		{
             int col = this.GetNearestColSelectedAtPoint(pt);
-            success = PuzzleSolver.CanSolutionFitInCol(myPuzzle, col, false);
+            success = bps.CanSolutionFit(myPuzzle, false, col);
 //            PuzzleStaticUtilities.DumpOneColumn(myPuzzle, col);
         } else if (row_clue_rect.contains (pt))
         {
             int row = this.GetNearestRowSelectedAtPoint(pt);
-            success = PuzzleSolver.CanSolutionFitInRow(myPuzzle, row, false);
+            success = bps.CanSolutionFit(myPuzzle, true, row);
 //            PuzzleStaticUtilities.DumpOneRow (myPuzzle, row);
         }
         if (success)
@@ -1342,62 +1314,6 @@ public class PBNHandler implements Printable {
         }
         PBNFrame myFrame = this.GetTheFrame();
         myFrame.repaint();
-    }
-
-    public void ProcessSingleClueFromPopup (Point pt)
-    {
-        PuzzleSolver.InitializeLastMessage();
-        int prev_num_knowns = myPuzzle.CountKnownSquares();
-        boolean success = true;
-        if (col_clue_rect.contains(pt))
-        {
-            int col = this.GetNearestColSelectedAtPoint (pt);
-            success = PuzzleSolver.ProcessSingleClueInColFromPopup (myPuzzle, col);
-        } else if (row_clue_rect.contains (pt))
-        {
-            int row = this.GetNearestRowSelectedAtPoint(pt);
-            success = PuzzleSolver.ProcessSingleClueInRowFromPopup (myPuzzle, row);
-        }
-        int num_knowns = myPuzzle.CountKnownSquares();
-        PBNFrame myFrame = this.GetTheFrame();
-        myFrame.repaint();
-        if (success)
-        {
-            PaintByNumberPro.HandleMessage("Process Edges",
-                "All went well! " + (num_knowns-prev_num_knowns) + " squares changed");
-        } else
-        {
-            PaintByNumberPro.HandleErrorMessage("Process Edges Error",
-                PuzzleSolver.GetLastMessage());
-        }
-    }
-    
-    public void ProcessBumpersFromPopup (Point pt)
-    {
-        PuzzleSolver.InitializeLastMessage();
-        int prev_num_knowns = myPuzzle.CountKnownSquares();
-        if (col_clue_rect.contains(pt))
-        {
-            int col = this.GetNearestColSelectedAtPoint (pt);
-            PuzzleSolver.ProcessBumpersInCol(myPuzzle, col);
-        } else if (row_clue_rect.contains (pt))
-        {
-            int row = this.GetNearestRowSelectedAtPoint(pt);
-            PuzzleSolver.ProcessBumpersInRow(myPuzzle, row);
-        }
-        int num_knowns = myPuzzle.CountKnownSquares();
-        boolean success = PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true, false);
-        PBNFrame myFrame = this.GetTheFrame();
-        myFrame.repaint();
-        if (success)
-        {
-            PaintByNumberPro.HandleMessage("Process Clues That Fit in Only One Spot",
-                "All went well! " + (num_knowns-prev_num_knowns) + " squares changed");
-        } else
-        {
-            PaintByNumberPro.HandleErrorMessage("Process Clues That Fit in Only One Spot Error",
-                PuzzleSolver.GetLastMessage());
-        }
     }
 
     public void ProcessEdgeFromPopup (Point pt)
@@ -1444,7 +1360,7 @@ public class PBNHandler implements Printable {
 			PuzzleSquare[] squares = BetterPuzzleSolver.CopyColFromPuzzle(myPuzzle, col);
 			int count_unknowns_before = bps.CountUnknownSquares (squares);
 
-			bps.ProcessLine_Better (clues, squares, myPuzzle.GetGuessLevel(), false, col, do_debug);
+			bps.ProcessLine (clues, squares, myPuzzle.GetGuessLevel(), false, col, do_debug);
 			int count_unknowns_after = bps.CountUnknownSquares (squares);
 			boolean something_changed = count_unknowns_before != count_unknowns_after;					
 			if (something_changed) 
@@ -1457,7 +1373,7 @@ public class PBNHandler implements Printable {
 			PuzzleSquare[] squares = BetterPuzzleSolver.CopyRowFromPuzzle(myPuzzle, row);
 			int count_unknowns_before = bps.CountUnknownSquares (squares);
 
-			bps.ProcessLine_Better (clues, squares, myPuzzle.GetGuessLevel(), true, row, do_debug);
+			bps.ProcessLine (clues, squares, myPuzzle.GetGuessLevel(), true, row, do_debug);
 			int count_unknowns_after = bps.CountUnknownSquares (squares);
 			boolean something_changed = count_unknowns_before != count_unknowns_after;					
 			if (something_changed) 
@@ -1467,35 +1383,6 @@ public class PBNHandler implements Printable {
         myFrame.repaint();
 		PaintByNumberPro.HandleMessage("Process Inner " + row_or_col,
 			"All went well! " + (num_knowns-prev_num_knowns) + " squares changed");
-    }
-	
-    public void ProcessAllBlobsFromPopup ()
-    {
-        if (myPuzzle == null) return;
-        PuzzleSolver.InitializeLastMessage();
-        int prev_num_knowns = myPuzzle.CountKnownSquares();
-        int first_num_knowns = prev_num_knowns;
-        int num_knowns = 0;
-        boolean keep_going = true;
-        boolean success = true;
-        while (keep_going)
-        {
-            success = PuzzleSolver.ProcessBlobs(myPuzzle, myPuzzle.GetGuessLevel());
-            num_knowns = myPuzzle.CountKnownSquares();
-            keep_going = success && (num_knowns != prev_num_knowns);
-            prev_num_knowns = num_knowns;
-        }
-        PBNFrame myFrame = this.GetTheFrame();
-        myFrame.repaint();
-        if (success)
-        {
-            PaintByNumberPro.HandleMessage("Process Blobs",
-                "All went well! " + (num_knowns-first_num_knowns) + " squares changed");
-        } else
-        {
-            PaintByNumberPro.HandleErrorMessage("Process Blobs Error",
-                PuzzleSolver.GetLastMessage());
-        }
     }
 
     public void ProcessEdgesFromPopup ()
@@ -1544,7 +1431,7 @@ public class PBNHandler implements Printable {
 			int count_unknowns_before = bps.CountUnknownSquares (squares);
 
 			// See if something has changed			
-			bps.ProcessLine_Better (clues, squares, myPuzzle.GetGuessLevel(), true, row, false);
+			bps.ProcessLine (clues, squares, myPuzzle.GetGuessLevel(), true, row, false);
 			int count_unknowns_after = bps.CountUnknownSquares (squares);
 			boolean something_changed = count_unknowns_before != count_unknowns_after;					
 			if (something_changed) 
@@ -1581,7 +1468,7 @@ public class PBNHandler implements Printable {
 			PuzzleSquare[] squares = BetterPuzzleSolver.CopyColFromPuzzle(myPuzzle, col);
 			int count_unknowns_before = bps.CountUnknownSquares (squares);
 
-			bps.ProcessLine_Better (clues, squares, myPuzzle.GetGuessLevel(), false, col, false);
+			bps.ProcessLine (clues, squares, myPuzzle.GetGuessLevel(), false, col, false);
 			int count_unknowns_after = bps.CountUnknownSquares (squares);
 			boolean something_changed = count_unknowns_before != count_unknowns_after;					
 			if (something_changed) 
@@ -1601,134 +1488,6 @@ public class PBNHandler implements Printable {
                 PuzzleSolver.GetLastMessage());
         }		
 	}	
-
-    public void ProcessSingleCluesFromPopup ()
-    {
-        if (myPuzzle == null) return;
-        PuzzleSolver.InitializeLastMessage();
-        int prev_num_knowns = myPuzzle.CountKnownSquares();
-        int first_num_knowns = prev_num_knowns;
-        int num_knowns = 0;
-        boolean keep_going = true;
-        boolean success = true;
-        while (keep_going)
-        {
-            success = PuzzleSolver.ProcessAllSingleClues(myPuzzle, myPuzzle.GetGuessLevel(), false);
-            num_knowns = myPuzzle.CountKnownSquares();
-            keep_going = success && (num_knowns != prev_num_knowns);
-            prev_num_knowns = num_knowns;
-        }
-        PBNFrame myFrame = this.GetTheFrame();
-        myFrame.repaint();
-        if (success)
-        {
-            PaintByNumberPro.HandleMessage("Process All Single Clues",
-                "All went well! " + (num_knowns-first_num_knowns) + " squares changed");
-        } else
-        {
-            PaintByNumberPro.HandleErrorMessage("Process All Single Clues Error",
-                PuzzleSolver.GetLastMessage());
-        }
-    }
-
-    public void ProcessCluesInOneSpotFromPopup ()
-    {
-        if (myPuzzle == null) return;
-        PuzzleSolver.InitializeLastMessage();
-        int prev_num_knowns = myPuzzle.CountKnownSquares();
-        PuzzleSolver.ProcessBumpers(myPuzzle, myPuzzle.GetGuessLevel());
-        int num_knowns = myPuzzle.CountKnownSquares();
-        PBNFrame myFrame = this.GetTheFrame();
-        myFrame.repaint();
-        boolean success = PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true, false);
-        if (success)
-        {
-            PaintByNumberPro.HandleMessage("Process All Clues That Fit in One Spot",
-                "All went well! " + (num_knowns-prev_num_knowns) + " squares changed");
-        } else
-        {
-            PaintByNumberPro.HandleErrorMessage("Process All Clues That Fit in One Spot Error",
-                PuzzleSolver.GetLastMessage());
-        }
-    }
-
-    public void CleanUpUnknownsFromPopup ()
-    {
-        if (myPuzzle == null) return;
-        PuzzleSolver.InitializeLastMessage();
-        int prev_num_knowns = myPuzzle.CountKnownSquares();
-        PuzzleSolver.CleanUpUnknowns(myPuzzle, myPuzzle.GetGuessLevel());
-
-        int num_knowns = myPuzzle.CountKnownSquares();
-        PBNFrame myFrame = this.GetTheFrame();
-        myFrame.repaint();
-        boolean success = PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true, false);
-        if (success)
-        {
-            PaintByNumberPro.HandleMessage("Clean Up Unknowns",
-                "All went well! " + (num_knowns-prev_num_knowns) + " squares changed");
-        } else
-        {
-            PaintByNumberPro.HandleErrorMessage("Clean Up Unknowns Error",
-                PuzzleSolver.GetLastMessage());
-        }
-    }
-
-    public void ProcessBlobsFromPopupItem (Point pt)
-    {
-        boolean success = true;
-        PuzzleSolver.InitializeLastMessage();
-        int prev_num_knowns = myPuzzle.CountKnownSquares();
-        if (col_clue_rect.contains(pt))
-        {
-            int col = this.GetNearestColSelectedAtPoint (pt);
-            success = PuzzleSolver.ProcessBlobsInColFromPopup (myPuzzle, col);
-        } else if (row_clue_rect.contains (pt))
-        {
-            int row = this.GetNearestRowSelectedAtPoint(pt);
-            success = PuzzleSolver.ProcessBlobsInRowFromPopup (myPuzzle, row);
-        }
-        int num_knowns = myPuzzle.CountKnownSquares();
-        PBNFrame myFrame = this.GetTheFrame();
-        myFrame.repaint();
-        if (success)
-        {
-            PaintByNumberPro.HandleMessage("Process Blobs",
-                "All went well! " + (num_knowns-prev_num_knowns) + " squares changed");
-        } else
-        {
-            PaintByNumberPro.HandleErrorMessage("Process Blobs Error",
-                PuzzleSolver.GetLastMessage());
-        }
-    }
-
-    public void CleanUpUnknownsFromPopup (Point pt)
-    {
-        PuzzleSolver.InitializeLastMessage();
-        int prev_num_knowns = myPuzzle.CountKnownSquares();
-        if (col_clue_rect.contains(pt))
-        {
-            int col = this.GetNearestColSelectedAtPoint (pt);
-            PuzzleSolver.CleanUpUnknownsInColFromPopup (myPuzzle, col);
-        } else if (row_clue_rect.contains (pt))
-        {
-            int row = this.GetNearestRowSelectedAtPoint(pt);
-            PuzzleSolver.CleanUpUnknownsInRowFromPopup (myPuzzle, row);
-        }
-        int num_knowns = myPuzzle.CountKnownSquares();
-        PBNFrame myFrame = this.GetTheFrame();
-        myFrame.repaint();
-        boolean success = PuzzleSolver.CheckPuzzleSoFar(myPuzzle, true, false);
-        if (success)
-        {
-            PaintByNumberPro.HandleMessage("Clean Up Unknowns",
-                "All went well! " + (num_knowns-prev_num_knowns) + " squares changed");
-        } else
-        {
-            PaintByNumberPro.HandleErrorMessage("Clean Up Unknowns Error",
-                PuzzleSolver.GetLastMessage());
-        }
-    }
 
     public boolean CanModifySquare (int row, int col)
     {
@@ -2105,11 +1864,8 @@ public class PBNHandler implements Printable {
             {
                 PuzzleSolver.ProcessEdges (clonePuzzle, 0, false);
                 if (PuzzleSolver.PuzzlesAreDifferent (myPuzzle, clonePuzzle)) return;
-                PuzzleSolver.ProcessBlobs (clonePuzzle, 0);
-                if (PuzzleSolver.PuzzlesAreDifferent (myPuzzle, clonePuzzle)) return;
-                PuzzleSolver.ProcessBumpers (clonePuzzle, 0);
-                if (PuzzleSolver.PuzzlesAreDifferent (myPuzzle, clonePuzzle)) return;
-                PuzzleSolver.CleanUpUnknowns (clonePuzzle, 0);
+				BetterPuzzleSolver bps = new BetterPuzzleSolver();
+				bps.ProcessPuzzle(clonePuzzle, 0, false);
                 if (PuzzleSolver.PuzzlesAreDifferent (myPuzzle, clonePuzzle)) return;
                 else
                     PaintByNumberPro.HandleMessage ("Give Me a Clue", "I don't have a clue right now!");

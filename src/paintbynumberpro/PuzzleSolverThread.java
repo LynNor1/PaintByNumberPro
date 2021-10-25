@@ -48,13 +48,6 @@ public class PuzzleSolverThread extends Thread {
 	
 	public void SetAutoStopAtEachNewGuess (boolean state)
 	{ auto_stop_at_each_new_guess = state; }
-
-    private boolean DoDebug ()
-    {
-        if (!debug) return false;
-        return PuzzleSolver.CheckATarget (puzzleToSolve, start_debug_row, start_debug_col,
-                start_debug_status, true);
-    }
 	
 	public boolean GetAutoStop ()
 	{ return auto_stop; }
@@ -74,79 +67,11 @@ public class PuzzleSolverThread extends Thread {
         while (success && !no_change && !do_stop)
         {
             int first_num_knowns = puzzleToSolve.CountKnownSquares();
- 
-			// ----------------------------
-			// BEGINNING OF OLD SOLVER CODE
-			// ----------------------------
-			
-			boolean do_old_solver = false;
-			boolean do_new_solver = true;
-			
-			if (do_old_solver)
-			{
-				
-            // Edge processing
-            boolean keep_edge_processing = true;
-            while (keep_edge_processing && !do_stop)
-            {
-                int prev_num_knowns = puzzleToSolve.CountKnownSquares();
-                success = PuzzleSolver.ProcessEdges (puzzleToSolve, guess_level, false);
-                int num_knowns = puzzleToSolve.CountKnownSquares();
-                RedrawFrame();
-                if (success && (prev_num_knowns != num_knowns))
-                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
-
-                keep_edge_processing = success && (prev_num_knowns != num_knowns);
-            }
-
-            // Blob processing
-            boolean keep_blob_processing = success;
-            while (keep_blob_processing && !do_stop)
-            {
-                int prev_num_knowns = puzzleToSolve.CountKnownSquares();
-                success = PuzzleSolver.ProcessBlobs (puzzleToSolve, guess_level);
-                int num_knowns = puzzleToSolve.CountKnownSquares();
-                RedrawFrame();
-                if (success && (prev_num_knowns != num_knowns))
-                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
-                keep_blob_processing = success && (prev_num_knowns != num_knowns);
-            }
-
-            // Bumper processing
-            boolean keep_one_spot_processing = success;
-            while (keep_one_spot_processing && !do_stop)
-            {
-                success = true;
-                int prev_num_knowns = puzzleToSolve.CountKnownSquares();
-                PuzzleSolver.ProcessBumpers(puzzleToSolve, guess_level);
-                int num_knowns = puzzleToSolve.CountKnownSquares();
-                RedrawFrame();
-                if (prev_num_knowns != num_knowns) success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
-                keep_one_spot_processing = success && (prev_num_knowns != num_knowns);
-            }
-
-            // Clean up unknowns
-            boolean keep_cleaning_up_unknowns = success;
-            while (keep_cleaning_up_unknowns && !do_stop)
-            {
-                success = true;
-                int prev_num_knowns = puzzleToSolve.CountKnownSquares();
-                PuzzleSolver.CleanUpUnknowns(puzzleToSolve, guess_level);
-                int num_knowns = puzzleToSolve.CountKnownSquares();
-                RedrawFrame();
-                if (prev_num_knowns != num_knowns) success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
-                keep_cleaning_up_unknowns = success && (prev_num_knowns != num_knowns);
-            }	
-			}
-			
-			if (do_new_solver)
-			{
 			
 			// ----------------------------
 			// BEGINNING OF NEW SOLVER CODE
 			// ----------------------------
 			
-//			BetterPuzzleSolver solver = new BetterPuzzleSolver (this);				
 			BetterPuzzleSolver solver = new BetterPuzzleSolver ();	
 				
             // Edge processing
@@ -183,9 +108,7 @@ public class PuzzleSolverThread extends Thread {
 				}
 
                 keep_processing = success && (prev_num_knowns != num_knowns);
- 			}
-			
-			}			
+ 			}		
 
             int last_num_knowns = puzzleToSolve.CountKnownSquares();
 
@@ -231,7 +154,6 @@ public class PuzzleSolverThread extends Thread {
         {
             PuzzleSolver.FillInEasyToComputeSquares (puzzleToSolve, true);
             RedrawFrame();
-if (DoDebug()) PaintByNumberPro.HandleMessageForSolver ("Solver", "After FillInEasyToComputeSquares");
         }
 
         // Precompute the total number of squares
@@ -246,7 +168,6 @@ if (DoDebug()) PaintByNumberPro.HandleMessageForSolver ("Solver", "After FillInE
             PaintByNumberPro.GetDrawHandler().SetMode (PBNHandler.Mode.NORMAL);
             return;
         }
-if (DoDebug()) PaintByNumberPro.HandleMessageForSolver ("Solver", "After first Iteration");
 
         // Alright here we go!
         boolean abort_processing = false;
@@ -286,20 +207,12 @@ if (DoDebug()) PaintByNumberPro.HandleMessageForSolver ("Solver", "After first I
             puzzleToSolve.SetPuzzleRowColSpecialMarked (row, col, true);
              
             RedrawFrame();
-if (DoDebug()) PaintByNumberPro.HandleMessageForSolver ("Solver", "Made a guess");
 
             // see if we've created any errors
             boolean good_so_far = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
 
             // If no errors, then Iterate
             if (good_so_far) good_so_far = IterateOnceUntilErrorOrNoChange (guess_level);
-if (DoDebug())
-{
-if (good_so_far)
-    PaintByNumberPro.HandleMessageForSolver ("Solver", "Guess is GOOD");
-else
-    PaintByNumberPro.HandleMessageForSolver ("Solver", "Guess was BAD");
-}
 
             // If there are errors, then we need to undo the last guesses one by one until
             // we reach a guess level where there are no errors currently in the puzzle
@@ -307,7 +220,6 @@ else
             {
                 puzzleToSolve.UndoLastGuess (true);
                 RedrawFrame();
-if (DoDebug()) PaintByNumberPro.HandleMessageForSolver ("Solver", "Undid last guess");
 
                 // Reset guess level to current guess level - 1 (because
                 // the UndoLastGuess leaves it at the current guess level)
@@ -331,13 +243,6 @@ if (DoDebug()) PaintByNumberPro.HandleMessageForSolver ("Solver", "Undid last gu
                 if (good_so_far)
                 {
                     good_so_far = IterateOnceUntilErrorOrNoChange(level);
-if (DoDebug())
-{
-if (good_so_far)
-    PaintByNumberPro.HandleMessageForSolver ("Solver", "Undoing guess was OK");
-else
-    PaintByNumberPro.HandleMessageForSolver ("Solver", "Undoing guess was BAD");
-}
                 }
             }
 			
