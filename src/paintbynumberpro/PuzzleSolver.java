@@ -1721,8 +1721,53 @@ public class PuzzleSolver extends Thread {
     public static Point GenerateNewGuess (PBNPuzzle myPuzzle)
     {
         if (!guess_vars_initialized) InitializeGuessVariables (myPuzzle);
-        return GenerateGuessFromEdgeWithMostClueSquares (myPuzzle);
+		return GenerateGuessFromRowOrColWithFewestUnknowns (myPuzzle);
+//        return GenerateGuessFromEdgeWithMostClueSquares (myPuzzle);
     }
+	
+	private static Point GenerateGuessFromRowOrColWithFewestUnknowns (PBNPuzzle myPuzzle)
+	{
+		int least_unknowns = myPuzzle.GetCols();
+		if (myPuzzle.GetRows() > least_unknowns) least_unknowns = myPuzzle.GetRows();
+		
+		boolean is_row = true;
+		int num = -1;
+		for (int i=0; i<myPuzzle.GetCols(); i++)
+		{
+			int unknowns = myPuzzle.CountUnknownSquaresInCol(i);
+			if (unknowns > 0 && unknowns < least_unknowns)
+			{
+				is_row = false;
+				num = i;
+				least_unknowns = unknowns;
+			}
+		}		
+		for (int i=0; i<myPuzzle.GetRows(); i++)
+		{
+			int unknowns = myPuzzle.CountUnknownSquaresInRow(i);
+			if (unknowns > 0 && unknowns < least_unknowns)
+			{
+				is_row = true;
+				num = i;
+				least_unknowns = unknowns;
+			}
+		}
+		
+		// now grab the first unknown square in our designated row or column
+		if (is_row)
+		{
+			int col = 0;
+			while (col < myPuzzle.GetCols() && !myPuzzle.GetPuzzleSquareAt(num, col).IsUnknown()) col++;
+			assert (col < myPuzzle.GetCols());
+			return (new Point (col, num));
+		} else
+		{
+			int row = 0;
+			while (row < myPuzzle.GetRows() && !myPuzzle.GetPuzzleSquareAt(row, num).IsUnknown()) row++;
+			assert (row < myPuzzle.GetRows());
+			return (new Point (num, row));
+		}
+	}
 
     private static Point GenerateSpiralGuess (PBNPuzzle myPuzzle)
     {

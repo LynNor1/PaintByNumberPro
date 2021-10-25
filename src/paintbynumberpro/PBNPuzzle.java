@@ -1943,6 +1943,22 @@ public class PBNPuzzle {
         }
         return num;
     }
+	
+	public int CountUnknownSquaresInRow (int row)
+	{
+		int total = 0;
+		for (int c=0; c<cols; c++)
+			if (puzzle[row][c].IsUnknown()) total++;
+		return total;
+	}
+	
+	public int CountUnknownSquaresInCol (int col)
+	{
+		int total = 0;
+		for (int r=0; r<rows; r++)
+			if (puzzle[r][col].IsUnknown()) total++;
+		return total;
+	}
 
     public int CountKnownSquares ()
     {
