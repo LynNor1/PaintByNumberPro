@@ -212,10 +212,10 @@ public class PuzzleSolver extends Thread {
     // Code to check puzzle solution or status so far
     // ----------------------------------------------
 
-	public static boolean CheckPuzzleSoFar (PBNPuzzle myPuzzle, boolean for_solver)
-	{ return CheckPuzzleSoFar (myPuzzle, for_solver, null); }
+	public static boolean CheckPuzzleSoFar (PBNPuzzle myPuzzle, boolean for_solver, boolean do_debug)
+	{ return CheckPuzzleSoFar (myPuzzle, for_solver, null, do_debug); }
 	
-    public static boolean CheckPuzzleSoFar (PBNPuzzle myPuzzle, boolean for_solver, PuzzleSolverThread theThread)
+    public static boolean CheckPuzzleSoFar (PBNPuzzle myPuzzle, boolean for_solver, PuzzleSolverThread theThread, boolean do_debug)
     {
         // Note: If the auto-solver is running (i.e. for_solver is TRUE), then
         // we don't want to see the error messages
@@ -232,9 +232,9 @@ public class PuzzleSolver extends Thread {
 			if (!bps.Better_CanSolutionFit (myPuzzle, true, r))
             {
                 if (!for_solver && last_msg != null)
-                    PaintByNumberPro.HandleErrorMessage (title, last_msg);
-//				else
-//					System.out.println ("Error in row " + r);
+                    PaintByNumberPro.HandleErrorMessage (title, "Error in row " + r);
+				else if (do_debug)
+					System.out.println ("Error in row " + r);
                 return false;
             }
         }
@@ -244,9 +244,9 @@ public class PuzzleSolver extends Thread {
 			if (!bps.Better_CanSolutionFit (myPuzzle, false, c))
             {
                 if (!for_solver && last_msg != null)
-                    PaintByNumberPro.HandleErrorMessage (title, last_msg);
-//				else
-//					System.out.println ("Error in col " + c);
+                    PaintByNumberPro.HandleErrorMessage (title, "Error in col " + c);
+				else if (do_debug)
+					System.out.println ("Error in col " + c);
                 return false;
             }
 

@@ -56,22 +56,25 @@ public class PBNFrame extends JFrame implements WindowListener {
         popupClueMenu = new JPopupMenu();
         JMenuItem autoFillPopupItem = new JMenuItem ("Auto fill");
         JMenuItem checkForwardPopupItem = new JMenuItem ("Check line");
-        JMenuItem blobPopupItem = new JMenuItem ("Process blobs");
+//        JMenuItem blobPopupItem = new JMenuItem ("Process blobs");
         JMenuItem processEdgePopupItem = new JMenuItem ("Process edges");
-        JMenuItem processBumpersPopupItem = new JMenuItem ("Process bumpers");
-        JMenuItem cleanUpUnknownsPopupItem = new JMenuItem ("Clean up unknowns");
+		JMenuItem processInnerLinePopupItem = new JMenuItem ("Process inner line");
+//        JMenuItem processBumpersPopupItem = new JMenuItem ("Process bumpers");
+//        JMenuItem cleanUpUnknownsPopupItem = new JMenuItem ("Clean up unknowns");
         popupClueMenu.add (autoFillPopupItem);
         popupClueMenu.add (checkForwardPopupItem);
         popupClueMenu.addSeparator();
         popupClueMenu.add(processEdgePopupItem);
-        popupClueMenu.add(blobPopupItem);
-        popupClueMenu.add(processBumpersPopupItem);
-        popupClueMenu.add(cleanUpUnknownsPopupItem);
+		popupClueMenu.add(processInnerLinePopupItem);
+//        popupClueMenu.add(blobPopupItem);
+//        popupClueMenu.add(processBumpersPopupItem);
+//        popupClueMenu.add(cleanUpUnknownsPopupItem);
         autoFillPopupItem.setEnabled(true);
-        blobPopupItem.setEnabled(true);
+//        blobPopupItem.setEnabled(true);
         processEdgePopupItem.setEnabled(true);
-        processBumpersPopupItem.setEnabled(true);
-        cleanUpUnknownsPopupItem.setEnabled(true);
+		processInnerLinePopupItem.setEnabled(true);
+//        processBumpersPopupItem.setEnabled(true);
+//        cleanUpUnknownsPopupItem.setEnabled(true);
 
         // Create popup menu for solving puzzle
         solvePuzzleMenu = new JPopupMenu();
@@ -81,9 +84,8 @@ public class PBNFrame extends JFrame implements WindowListener {
         JMenuItem getNextGuessPopupItem = new JMenuItem ("Get & set next guess");
         JMenuItem undoLastGuessSolverPopupItem = new JMenuItem ("Undo last guess");
         JMenuItem processEdgesPopupItem = new JMenuItem ("Process all edges");
-        JMenuItem processAllBlobsPopupItem = new JMenuItem ("Process blobs");
-        JMenuItem processAllBumpersPopupItem = new JMenuItem ("Process bumpers");
-        JMenuItem cleanUpAllUnknownsPopupItem = new JMenuItem ("Clean up all unknowns");
+		JMenuItem processInnerPuzzleRowsPopupItem = new JMenuItem ("Process inner puzzle rows");
+		JMenuItem processInnerPuzzleColsPopupItem = new JMenuItem ("Process inner puzzle cols");		
         solvePuzzleMenu.add (fillInObviousPopupItem);
         solvePuzzleMenu.add (checkPuzzlePopupItem);
         solvePuzzleMenu.addSeparator();
@@ -92,13 +94,9 @@ public class PBNFrame extends JFrame implements WindowListener {
         solvePuzzleMenu.add (undoLastGuessSolverPopupItem);
         solvePuzzleMenu.addSeparator();
         solvePuzzleMenu.add(processEdgesPopupItem);
-        solvePuzzleMenu.add (processAllBlobsPopupItem);
-        solvePuzzleMenu.add (processAllBumpersPopupItem);
-        solvePuzzleMenu.add (cleanUpAllUnknownsPopupItem);
+		solvePuzzleMenu.add(processInnerPuzzleRowsPopupItem);
+		solvePuzzleMenu.add(processInnerPuzzleColsPopupItem);
         processEdgesPopupItem.setEnabled(true);
-        processAllBlobsPopupItem.setEnabled(true);
-        processAllBumpersPopupItem.setEnabled(true);
-        cleanUpAllUnknownsPopupItem.setEnabled(true);
 		
 		// Create a JPanel of a given size
 		myPanel = new PBNDrawPanel(myDrawHandler);
@@ -174,19 +172,35 @@ public class PBNFrame extends JFrame implements WindowListener {
 				if (myDrawHandler != null) myDrawHandler.ProcessEdgesFromPopup();
 			}
         });
+		
+		processInnerPuzzleRowsPopupItem.addActionListener(new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent ae)
+			{
+				if (myDrawHandler != null) myDrawHandler.ProcessInnerPuzzleRowsFromPopup();
+			}
+		});
+				
+		processInnerPuzzleColsPopupItem.addActionListener(new ActionListener ()
+		{
+			public void actionPerformed (ActionEvent ae)
+			{
+				if (myDrawHandler != null) myDrawHandler.ProcessInnerPuzzleColsFromPopup();
+			}
+		});		
 
+		/*
         processAllBlobsPopupItem.addActionListener (new ActionListener ()
         {
 			public void actionPerformed (ActionEvent ae)
 			{
-                /*
-				if (myDrawHandler != null) myDrawHandler.ProcessSingleCluesFromPopup();
-                 *
-                 */
+//				if (myDrawHandler != null) myDrawHandler.ProcessSingleCluesFromPopup();
                 if (myDrawHandler != null) myDrawHandler.ProcessAllBlobsFromPopup();
 			}
         });
+		*/
 
+		/*
         processAllBumpersPopupItem.addActionListener (new ActionListener ()
         {
 			public void actionPerformed (ActionEvent ae)
@@ -194,7 +208,9 @@ public class PBNFrame extends JFrame implements WindowListener {
 				if (myDrawHandler != null) myDrawHandler.ProcessCluesInOneSpotFromPopup();
 			}
         });
+		*/
 
+		/*
         cleanUpAllUnknownsPopupItem.addActionListener (new ActionListener ()
         {
 			public void actionPerformed (ActionEvent ae)
@@ -202,6 +218,7 @@ public class PBNFrame extends JFrame implements WindowListener {
 				if (myDrawHandler != null) myDrawHandler.CleanUpUnknownsFromPopup();
 			}
         });
+		*/
 		
 		// Create a listener for remove marks
 		removeMarksPopupItem.addActionListener(new ActionListener()
@@ -275,6 +292,7 @@ public class PBNFrame extends JFrame implements WindowListener {
 			}
         });
 
+		/*
         // Create a listener for lock
         blobPopupItem.addActionListener (new ActionListener ()
         {
@@ -282,10 +300,6 @@ public class PBNFrame extends JFrame implements WindowListener {
 			{
 				if (myPuzzle != null && myDrawHandler != null)
 				{
-                    /*
-                    myDrawHandler.ProcessSingleClueFromPopup(popupLockAtPoint);
-                     *
-                     */
                     myDrawHandler.ProcessBlobsFromPopupItem (popupLockAtPoint);
 				}
 			}
@@ -301,6 +315,7 @@ public class PBNFrame extends JFrame implements WindowListener {
 				}
 			}
         });
+		*/
 
         // Create a listener for lock
         processEdgePopupItem.addActionListener (new ActionListener ()
@@ -313,7 +328,20 @@ public class PBNFrame extends JFrame implements WindowListener {
 				}
 			}
         });
+		
+        // Create a listener for lock
+        processInnerLinePopupItem.addActionListener (new ActionListener ()
+        {
+			public void actionPerformed (ActionEvent ae)
+			{
+				if (myPuzzle != null && myDrawHandler != null)
+				{
+                    myDrawHandler.ProcessInnerLineFromPopup(popupLockAtPoint);
+				}
+			}
+        });		
 
+		/*
         cleanUpUnknownsPopupItem.addActionListener (new ActionListener ()
         {
 			public void actionPerformed (ActionEvent ae)
@@ -324,6 +352,7 @@ public class PBNFrame extends JFrame implements WindowListener {
 				}
 			}
         });
+		*/
 
 		// Create a listener for mark
 		markPopupItem.addActionListener (new ActionListener()

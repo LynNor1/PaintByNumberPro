@@ -534,7 +534,7 @@ public class BetterPuzzleSolver {
 			}
 						
 			// This is temporarily added in for debugging
-			if (do_debug && something_changed && !PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true))
+			if (do_debug && something_changed && !PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true, do_debug))
 			{
 				System.out.println ("Puzzle check failed after row " + row + ":\n");
 				System.out.println ("Clues:");
@@ -591,7 +591,7 @@ public class BetterPuzzleSolver {
 			}
 			
 			// This is temporarily added in for debugging
-			if (do_debug && something_changed && !PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true))
+			if (do_debug && something_changed && !PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true, do_debug))
 			{
 				System.out.println ("Puzzle check failed after column " + col + ":\n");
 				System.out.println ("Clues:");
@@ -612,7 +612,7 @@ public class BetterPuzzleSolver {
 		return true;
 	}
 	
-	private int CountUnknownSquares (PuzzleSquare[] squares)
+	public int CountUnknownSquares (PuzzleSquare[] squares)
 	{
 		int count = 0;
 		for (int i=0; i<squares.length; i++)
@@ -657,7 +657,7 @@ public class BetterPuzzleSolver {
 	// Process one set of clues and PuzzleSquares (can be either column or row)
 	// ------------------------------------------------------------------------
 	
-	private PuzzleSquare[] ProcessLine_Better (int[] clues, PuzzleSquare[] squares, int guess_level,
+	public PuzzleSquare[] ProcessLine_Better (int[] clues, PuzzleSquare[] squares, int guess_level,
 			boolean is_row, int num, boolean debug)
 	{
 		// debug is going to be ignored for now because the calling code
@@ -666,7 +666,7 @@ public class BetterPuzzleSolver {
 		// by setting do_debug here to true for whatever row or column is
 		// causing the problem.
 		
-		boolean do_debug = false;	// This is for more detailed debugging
+		boolean do_debug = debug;	// This is for more detailed debugging
 		boolean high_level_debug = false;	// This is for a before/after picture
 		
 		// -----------------------------------------------------
@@ -1536,7 +1536,8 @@ public class BetterPuzzleSolver {
 								int cell = istart;
 								for (int ii=0; ii<cl.value && does_fit; ii++)
 								{
-									if (squares[cell].IsEmpty()) does_fit = false;
+									if (cell < 0 || cell >= N) does_fit = false;
+									else if (squares[cell].IsEmpty()) does_fit = false;
 									cell++;
 								}
 								if (does_fit && cell < N && squares[cell].IsFilled()) does_fit = false;
@@ -1892,8 +1893,11 @@ public class BetterPuzzleSolver {
 							// process size of AntiBlob in case edges have FILLED spaces
 							int start_ab = saveBlob.start;
 							int end_ab   = saveBlob.end;
-							if (start_ab > 0 && squares[start_ab-1].IsFilled()) start_ab++;
-							if (end_ab < N-1 && squares[end_ab+1].IsFilled()) end_ab--;
+							// Take out the following two lines - we can't assume that the FILLED
+							// squares at one end or the other of the Anti-Blob is NOT going to be used
+							// by the clue
+//							if (start_ab > 0 && squares[start_ab-1].IsFilled()) start_ab++;
+//							if (end_ab < N-1 && squares[end_ab+1].IsFilled()) end_ab--;
 							Clue2 myClue = myClues.clue_list[clue_index+1];
 							if (start_ab < myClue.start_extent) start_ab = myClue.start_extent;
 							if (end_ab   > myClue.end_extent)   end_ab   = myClue.end_extent;
@@ -1920,12 +1924,17 @@ public class BetterPuzzleSolver {
 								if (uncertainty == 0)
 									PutEmptyOnBothEnds (squares, start_ab, start_ab+myClue.value-1, guess_level);
 								
-								saveBlob.clue_list = new ArrayList();	// Remove all clues associated with this AntiBlob now
-								// Remove this clue_index from all other clue_lists
-								for (Blob bb : blob_list)
-									if (bb != saveBlob)
-										bb.RemoveClueIndexFromClueList(clue_index);												
-										
+								// Just because this clue fit within this AntiBlob, that
+								// doesn't mean that all other clues do NOT fit.  We should only
+								// eliminate the clues in our list that truly don't fit now that
+								// we know that this clue does fit.
+								if (saveBlob.clue_list.size() == 1 && saveBlob.is_anchored_end && saveBlob.is_anchored_start)
+								{
+									// Remove this clue_index from all other clue_lists
+									for (Blob bb : blob_list)
+										if (bb != saveBlob)
+											bb.RemoveClueIndexFromClueList(clue_index);	
+								}
 								
 								if (do_debug)
 								{
@@ -4631,7 +4640,7 @@ public class BetterPuzzleSolver {
     // Utility functions to transfer rows/cols to/from the puzzle
     // ----------------------------------------------------------
 
-    private static PuzzleSquare[] CopyRowFromPuzzle (PBNPuzzle myPuzzle, int row)
+    public static PuzzleSquare[] CopyRowFromPuzzle (PBNPuzzle myPuzzle, int row)
     {
         PuzzleSquare[] newRow = new PuzzleSquare[myPuzzle.GetCols()];
         for (int i=0; i<myPuzzle.GetCols(); i++)
@@ -4639,7 +4648,7 @@ public class BetterPuzzleSolver {
         return newRow;
     }
 
-    private static PuzzleSquare[] CopyColFromPuzzle (PBNPuzzle myPuzzle, int col)
+    public static PuzzleSquare[] CopyColFromPuzzle (PBNPuzzle myPuzzle, int col)
     {
         PuzzleSquare[] newCol = new PuzzleSquare[myPuzzle.GetRows()];
         for (int i=0; i<myPuzzle.GetRows(); i++)
@@ -4647,14 +4656,14 @@ public class BetterPuzzleSolver {
         return newCol;
     }
 	
-    private static void CopyColToPuzzle (PBNPuzzle myPuzzle, PuzzleSquare[] myCol, int col)
+    public static void CopyColToPuzzle (PBNPuzzle myPuzzle, PuzzleSquare[] myCol, int col)
     {
         if (myPuzzle == null || myCol == null) return;
         for (int i=0; i<myPuzzle.GetRows(); i++)
             myPuzzle.SetPuzzleRowCol(i, col, myCol[i]);
     }
 	
-    private static void CopyRowToPuzzle (PBNPuzzle myPuzzle, PuzzleSquare[] myRow, int row)
+    public static void CopyRowToPuzzle (PBNPuzzle myPuzzle, PuzzleSquare[] myRow, int row)
     {
         /*
         if (myPuzzle == null || myRow == null) return;

@@ -94,7 +94,7 @@ public class PuzzleSolverThread extends Thread {
                 int num_knowns = puzzleToSolve.CountKnownSquares();
                 RedrawFrame();
                 if (success && (prev_num_knowns != num_knowns))
-                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
 
                 keep_edge_processing = success && (prev_num_knowns != num_knowns);
             }
@@ -108,7 +108,7 @@ public class PuzzleSolverThread extends Thread {
                 int num_knowns = puzzleToSolve.CountKnownSquares();
                 RedrawFrame();
                 if (success && (prev_num_knowns != num_knowns))
-                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
                 keep_blob_processing = success && (prev_num_knowns != num_knowns);
             }
 
@@ -121,7 +121,7 @@ public class PuzzleSolverThread extends Thread {
                 PuzzleSolver.ProcessBumpers(puzzleToSolve, guess_level);
                 int num_knowns = puzzleToSolve.CountKnownSquares();
                 RedrawFrame();
-                if (prev_num_knowns != num_knowns) success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+                if (prev_num_knowns != num_knowns) success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
                 keep_one_spot_processing = success && (prev_num_knowns != num_knowns);
             }
 
@@ -134,7 +134,7 @@ public class PuzzleSolverThread extends Thread {
                 PuzzleSolver.CleanUpUnknowns(puzzleToSolve, guess_level);
                 int num_knowns = puzzleToSolve.CountKnownSquares();
                 RedrawFrame();
-                if (prev_num_knowns != num_knowns) success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+                if (prev_num_knowns != num_knowns) success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
                 keep_cleaning_up_unknowns = success && (prev_num_knowns != num_knowns);
             }	
 			}
@@ -161,7 +161,7 @@ public class PuzzleSolverThread extends Thread {
                 if (success && (prev_num_knowns != num_knowns))
 				{
 //					System.out.println ("CheckPuzzleSoFar...");
-                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
 				}
 
                 keep_edge_processing = success && (prev_num_knowns != num_knowns);
@@ -179,7 +179,7 @@ public class PuzzleSolverThread extends Thread {
                 if (success && (prev_num_knowns != num_knowns))
 				{
 //					System.out.println ("CheckPuzzleSoFar...");
-                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
 				}
 
                 keep_processing = success && (prev_num_knowns != num_knowns);
@@ -221,34 +221,6 @@ public class PuzzleSolverThread extends Thread {
 
         // Initialize the guessing parameters
         PuzzleSolver.InitializeGuessVariables(puzzleToSolve);
-
-        // Initialize debugging parameters
-        /* This was for debugging Puzzle2 (when I had a process blobs error)
-        int[] mytarget_rows = {7, 7, 9, 9};
-        int[] mytarget_cols = {6, 9, 6, 9 };
-        PuzzleSquare.SquareStatus[] mytarget_status = {
-            PuzzleSquare.SquareStatus.FILLED,
-            PuzzleSquare.SquareStatus.EMPTY,
-            PuzzleSquare.SquareStatus.EMPTY,
-            PuzzleSquare.SquareStatus.FILLED
-        };
-         *
-         */
-        int[] mytarget_rows = {8};
-        int[] mytarget_cols = {6};
-        PuzzleSquare.SquareStatus[] mytarget_status = {
-            PuzzleSquare.SquareStatus.FILLED
-        };
-        boolean do_AND = false;
-        if (debug) PuzzleSolver.SetTarget (mytarget_rows, mytarget_cols, mytarget_status, do_AND);
-        else PuzzleSolver.SetDebuggingOff();
-
-        /*
-        // Clear the puzzle
-        puzzleToSolve.clearPuzzle();
-        RedrawFrame();
-         *
-         */
 
         // Get the largest guess level with at least one square
         int guess_level = puzzleToSolve.GetMaxGuessLevelWithKnownSquares ();
@@ -317,7 +289,7 @@ if (DoDebug()) PaintByNumberPro.HandleMessageForSolver ("Solver", "After first I
 if (DoDebug()) PaintByNumberPro.HandleMessageForSolver ("Solver", "Made a guess");
 
             // see if we've created any errors
-            boolean good_so_far = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+            boolean good_so_far = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
 
             // If no errors, then Iterate
             if (good_so_far) good_so_far = IterateOnceUntilErrorOrNoChange (guess_level);
@@ -353,7 +325,7 @@ if (DoDebug()) PaintByNumberPro.HandleMessageForSolver ("Solver", "Undid last gu
                 puzzleToSolve.SetGuessLevel(level);
 
                 // see if we've created any errors simply by undoing the last guess
-                good_so_far = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true);
+                good_so_far = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
 
                 // If no errors, then Iterate
                 if (good_so_far)

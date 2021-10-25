@@ -61,6 +61,9 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
 
     public boolean GetAssumeGuessWrong ()
     { return AssumeGuessWrong_JCheckBox.isSelected(); }
+	
+	public boolean GetDebugSelected()
+	{ return Debug_JCheckBox.isSelected(); }
 
     public boolean GetAutoSaveOnOff ()
     { return AutoSave_JCheckBox.isSelected(); }
