@@ -54,7 +54,7 @@ public class PBNPuzzle {
 	private int guess_level = 0;	// 0==known, 1+ = guess_level
     private boolean mark_first_selection = false;
 	
-	private static final int MAXCLUES = 20;
+	private static final int MAXCLUES = 50;
 	
 	public static final int UNACCOUNTEDFOR = 0;
 	public static final int ACCOUNTEDFOR = 1;
