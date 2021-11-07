@@ -136,7 +136,7 @@ public class PaintByNumberPro {
                     "Do you want to save the puzzle first?",
                     "Application Quitting", JOptionPane.YES_NO_CANCEL_OPTION);
             if (answer == JOptionPane.YES_OPTION) 
-                PuzzleStaticUtilities.WritePuzzleToFile (myPuzzle, myPuzzle.GetFile());
+                PuzzleStaticUtilities.WritePuzzleToFile (myPuzzle, myPuzzle.GetFile(), false);
             if (answer == JOptionPane.CANCEL_OPTION) return;
 
             // Tell the handler to close itself

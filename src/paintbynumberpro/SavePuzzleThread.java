@@ -94,7 +94,7 @@ public class SavePuzzleThread extends Thread {
                         if (myFile == null) myFile = thePuzzle.GetFile();
                         if (myFile != null)
                         {						
-                            if (PuzzleStaticUtilities.WritePuzzleToFile(thePuzzle, myFile))
+                            if (PuzzleStaticUtilities.WritePuzzleToFile(thePuzzle, myFile, false))
                             {									
                                 myDrawHandler.PuzzleSavedSuccessfullyToFile (myFile);
                                 if (!auto_save_on)

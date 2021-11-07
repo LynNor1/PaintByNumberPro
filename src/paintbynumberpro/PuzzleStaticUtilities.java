@@ -63,7 +63,7 @@ public class PuzzleStaticUtilities {
     }
 
 	// Create and initialize a brand new puzzle by reading a file
-	private static PBNPuzzle CreatePuzzleFromFile(File myFile)
+	public static PBNPuzzle CreatePuzzleFromFile(File myFile)
 	{
 		boolean debug = false;
 
@@ -490,7 +490,7 @@ public class PuzzleStaticUtilities {
 		return myPuzzle;
 	}
 
-	public static boolean WritePuzzleToFile (PBNPuzzle thePuzzle, File myFile)
+	public static boolean WritePuzzleToFile (PBNPuzzle thePuzzle, File myFile, boolean simple)
 	{
         if (myFile == null) return false;
 		if (!myFile.exists())
@@ -558,6 +558,15 @@ public class PuzzleStaticUtilities {
 				for (int n=0; n<myPuzzle.GetCol_NClues(i); n++)
 					myWriter.write("\t"+myPuzzle.GetCol_Clues(i, n));
 			}
+			
+			// Stop here if we're just doing a simple write
+			if (simple)
+			{
+				myWriter.flush();
+				return true;
+			}
+			
+			// Continue on otherwise
 			for (int i=0; i<myPuzzle.GetRows(); i++)
 			{
 				myWriter.write("\nRow_clues_status\t"+i+"\t"+myPuzzle.GetRow_NClues(i));
@@ -617,7 +626,7 @@ public class PuzzleStaticUtilities {
             if (option == JFileChooser.APPROVE_OPTION)
             {
                 File theFile = chooser.getSelectedFile();
-                PuzzleStaticUtilities.WritePuzzleToFile(newPuzzle, theFile);      
+                PuzzleStaticUtilities.WritePuzzleToFile(newPuzzle, theFile, false);      
                 newPuzzle.SetFile (theFile);
             }
             // have the PBNControlsFrame refresh with the new file name

@@ -706,6 +706,30 @@ public class PBNPuzzle {
     { return row_clues[row][clue_num]; }
     public int[] GetRow_Clues (int row)
     { return row_clues[row]; }
+	
+	public int GetTotalColClues ()
+	{
+		int total = 0;
+		for (int i=0; i<cols; i++)
+		{
+			int num_clues = GetCol_NClues(i);
+			for (int j=0; j<num_clues; j++)
+				total += this.GetCol_Clues (i, j);
+		}
+		return total;
+	}
+	public int GetTotalRowClues ()
+	{
+		int total = 0;
+		for (int i=0; i<rows; i++)
+		{
+			int num_clues = GetRow_NClues(i);
+			for (int j=0; j<num_clues; j++)
+				total += this.GetRow_Clues (i, j);
+		}
+		return total;
+	}
+	
 
     public int GetCol_Clue_Status (int col, int clue_num)
     {
