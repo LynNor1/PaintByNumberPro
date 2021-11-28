@@ -35,6 +35,11 @@ public class ColCluesComponent extends JComponent
         InitializeDimensionsForNumClues (1);
         setOpaque(true);
     }
+	
+	public void ReinitializeDimensions ()
+	{
+		InitializeDimensionsForNumClues (num_clues);
+	}
     
     private void InitializeDimensionsForNumClues (int num_clues)
     {
@@ -91,7 +96,7 @@ public class ColCluesComponent extends JComponent
         
         if (clues == null || clues.length < 1) return;
         
-        int clue_height = myDrawHandler.GetThePuzzle().GetClue_Height();
+        int clue_height = myDrawHandler.GetClueHeight();
         int box_size = myDrawHandler.GetBoxSize();
 
         int x = ul_x + 2;

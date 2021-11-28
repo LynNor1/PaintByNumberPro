@@ -427,6 +427,13 @@ public class PBNFrame extends JFrame implements WindowListener {
     {   
         return myPanel.getVisibleRect();
     }
+	
+	public Rectangle GetViewRect()
+	{
+		JViewport theVP = myScrollPane.getViewport();
+		Rectangle theVP_rect = theVP.getViewRect();
+		return theVP_rect;
+	}
 
     // Window Listener methods
     public void windowClosing (WindowEvent we)

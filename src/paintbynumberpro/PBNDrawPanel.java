@@ -8,7 +8,7 @@ import java.awt.Toolkit;
 import java.awt.event.*;
 import javax.swing.*;
 
-public class PBNDrawPanel extends JPanel implements MouseListener,
+public class PBNDrawPanel extends JLayeredPane implements MouseListener,
 													Scrollable,
 													KeyListener,
                                                     MouseMotionListener,
@@ -29,6 +29,7 @@ public class PBNDrawPanel extends JPanel implements MouseListener,
     private boolean doingPopupMenu = false;
     private boolean shiftDown = false;
     private boolean draggingFilledSquares = false;
+	private boolean is_dragging = false;
     private int num_draggingFilledSquares = 0;
 	
 	PBNDrawPanel(PBNHandler theHandler)
@@ -44,17 +45,17 @@ public class PBNDrawPanel extends JPanel implements MouseListener,
         myCounterComponent = new Counter(myDrawHandler);
         myCounterComponent.setVisible(false);
         myCounterComponent.SetPuzzleDrawHandler(myDrawHandler);
-        add(myCounterComponent);
+        add(myCounterComponent, 3);
         
         myColCluesComponent = new ColCluesComponent (myDrawHandler);
         myColCluesComponent.setVisible(false);
         myColCluesComponent.SetPuzzleDrawHandler(myDrawHandler);
-        add(myColCluesComponent);
+        add(myColCluesComponent, 2);
         
         myRowCluesComponent = new RowCluesComponent (myDrawHandler);
         myRowCluesComponent.setVisible(false);
         myRowCluesComponent.SetPuzzleDrawHandler(myDrawHandler);
-        add(myRowCluesComponent);
+        add(myRowCluesComponent, 2);
 
         // set and request keyboard focus
         this.setFocusable(true);
@@ -103,9 +104,15 @@ public class PBNDrawPanel extends JPanel implements MouseListener,
     public void RedrawCluesComponents ()
     {
         if (myColCluesComponent != null && myColCluesComponent.isVisible())
+		{
+			myColCluesComponent.ReinitializeDimensions();
             myColCluesComponent.repaint();
+		}
         if (myRowCluesComponent != null && myRowCluesComponent.isVisible())
-            myRowCluesComponent.repaint();                    
+		{
+			myRowCluesComponent.ReinitializeDimensions();
+            myRowCluesComponent.repaint();    
+		}
     }
 
     public void ModeChanged ()
@@ -151,13 +158,13 @@ public class PBNDrawPanel extends JPanel implements MouseListener,
     private void CleanUpRowCol (int row, int col)
     {
         // Restore column of mouseDownPuzzleRectSquare
-        col = mouseDownPuzzleRectSquare.x;
-        for (row=0; row<myPuzzle.GetRows(); row++)
-            myPuzzle.RestoreSquareStatusFromBackup(col, row);
+		int target_col = col;
+        for (int irow=0; irow<myPuzzle.GetRows(); irow++)
+            myPuzzle.RestoreSquareStatusFromBackup(target_col, irow);
         // Restore row of mouseDownPuzzleRectSquare
-        row = mouseDownPuzzleRectSquare.y;
-        for (col=0; col<myPuzzle.GetCols(); col++)
-            myPuzzle.RestoreSquareStatusFromBackup(col, row);
+		int target_row = row;
+        for (int icol=0; icol<myPuzzle.GetCols(); icol++)
+            myPuzzle.RestoreSquareStatusFromBackup(icol, target_row);
     }
 
 	// -------------------------------------
@@ -178,9 +185,12 @@ public class PBNDrawPanel extends JPanel implements MouseListener,
         boolean cleanupRowCol = false;
         if (trackingInPuzzleRect)
         {
+			// we are dragging
+			is_dragging = true;
+			
             Point pt = ev.getPoint();
             Point myPuzzleRectSquare = myDrawHandler.GetSelectedSquare(pt);
-            if (myPuzzleRectSquare != null)
+            if (myPuzzleRectSquare != null && !myPuzzleRectSquare.equals(lastSquareSelected))
             {
                 // Handle dragging along a column
                 if (mouseDownPuzzleRectSquare.x == myPuzzleRectSquare.x &&
@@ -214,6 +224,9 @@ public class PBNDrawPanel extends JPanel implements MouseListener,
                     // Save last square that's selected during this click-n-drag
                     lastSquareSelected.x = myPuzzleRectSquare.x;
                     lastSquareSelected.y = myPuzzleRectSquare.y;
+					myDrawHandler.SetCurrentSelection (lastSquareSelected);
+//					myDrawHandler.HighlightClues (null, mouseDownPuzzleRectSquare.y, mouseDownPuzzleRectSquare.x, false);					
+					myDrawHandler.HighlightClues (null, lastSquareSelected.y, lastSquareSelected.x, true);										
                     // Count number of adjacent filled squares in this column
                     if (draggingFilledSquares)
                         num_draggingFilledSquares = myPuzzle.CountAdjacentFilledSquaresInCol (lastSquareSelected.y, lastSquareSelected.x);
@@ -248,6 +261,9 @@ public class PBNDrawPanel extends JPanel implements MouseListener,
                     // Save last square that's selected during this click-n-drag
                     lastSquareSelected.x = myPuzzleRectSquare.x;
                     lastSquareSelected.y = myPuzzleRectSquare.y;
+					myDrawHandler.SetCurrentSelection (lastSquareSelected);
+//					myDrawHandler.HighlightClues (null, mouseDownPuzzleRectSquare.y, mouseDownPuzzleRectSquare.x, false);										
+					myDrawHandler.HighlightClues (null, lastSquareSelected.y, lastSquareSelected.x, true);					
                     if (draggingFilledSquares)
                         num_draggingFilledSquares = myPuzzle.CountAdjacentFilledSquaresInRow (lastSquareSelected.y, lastSquareSelected.x);
                 } else
@@ -255,13 +271,31 @@ public class PBNDrawPanel extends JPanel implements MouseListener,
                     cleanupRowCol = true;
                     lastSquareSelected.x = -1;
                     lastSquareSelected.y = -1;
+					myDrawHandler.SetCurrentSelection(mouseDownPuzzleRectSquare);
+					num_draggingFilledSquares = myPuzzle.CountAdjacentFilledSquaresInRow (mouseDownPuzzleRectSquare.y, mouseDownPuzzleRectSquare.x);
+					myDrawHandler.HighlightClues (null, mouseDownPuzzleRectSquare.y, mouseDownPuzzleRectSquare.x, true);										
                 }
             }
-            myDrawHandler.DrawSideMarkersAt(lastSquareSelected.y, lastSquareSelected.x);
-            if (draggingFilledSquares && !cleanupRowCol)
-                myDrawHandler.DrawCounterAt (lastSquareSelected.y, lastSquareSelected.x, num_draggingFilledSquares);
+            if (!cleanupRowCol) 
+				myDrawHandler.DrawSideMarkersAt(lastSquareSelected.y, lastSquareSelected.x);
+			else
+				myDrawHandler.DrawSideMarkersAt(mouseDownPuzzleRectSquare.y, mouseDownPuzzleRectSquare.x);
+            if (draggingFilledSquares)
+			{
+				if (cleanupRowCol)
+					myDrawHandler.DrawCounterAt (mouseDownPuzzleRectSquare.y, mouseDownPuzzleRectSquare.x, num_draggingFilledSquares);
+				else
+					myDrawHandler.DrawCounterAt (lastSquareSelected.y, lastSquareSelected.x, num_draggingFilledSquares);
+			}					
             if (cleanupRowCol)
-                CleanUpRowCol (mouseDownPuzzleRectSquare.y, mouseDownPuzzleRectSquare.x);
+			{
+				for (int y=0; y<myPuzzle.GetRows(); y++)
+					myPuzzle.RestoreSquareStatusFromBackup(mouseDownPuzzleRectSquare.x, y);			
+				for (int x=0; x<myPuzzle.GetCols(); x++)
+					myPuzzle.RestoreSquareStatusFromBackup(x, mouseDownPuzzleRectSquare.y);						
+				myDrawHandler.SetCurrentSelection (mouseDownPuzzleRectSquare);
+				myDrawHandler.HighlightClues (null, mouseDownPuzzleRectSquare.y, mouseDownPuzzleRectSquare.x, true);														
+			}
         }
     }
 
@@ -274,6 +308,9 @@ public class PBNDrawPanel extends JPanel implements MouseListener,
 	public void mousePressed (MouseEvent ev)
     {
         if (myMode == PBNHandler.Mode.AUTO_SOLVE) return;
+		
+		// reset mouse dragging
+		is_dragging = false;
 
         // Add another way to detect right-click
         int modifiers = ev.getModifiersEx();
@@ -357,7 +394,7 @@ public class PBNDrawPanel extends JPanel implements MouseListener,
                 // If mouse-up in same square as mouse-down, then call mouseClicked()
                 if (myPuzzleRectSquare.x == mouseDownPuzzleRectSquare.x &&
                     myPuzzleRectSquare.y == mouseDownPuzzleRectSquare.y)
-                    myDrawHandler.MouseClickXY(ev.getPoint());
+                    if (!is_dragging) myDrawHandler.MouseClickXY(ev.getPoint());
                 // Finalize changes
                 else if(myPuzzleRectSquare.x == mouseDownPuzzleRectSquare.x)
                 {

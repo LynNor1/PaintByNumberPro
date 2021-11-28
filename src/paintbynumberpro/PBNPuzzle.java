@@ -561,18 +561,24 @@ public class PBNPuzzle {
         lastClueSelection = new Selection ();
     }
 
-    public void StartNewGuessLevel (boolean mark_first)
+    public void StartNewGuessLevel ()
     {
         int max_level = this.GetMaxGuessLevel();
         int cnt_squares = this.GetSquaresAtGuessLevel(max_level);
         if (cnt_squares > 0) guess_level = max_level + 1;
         else guess_level = max_level;
-        mark_first_selection = true;
         myDrawHandler.SetGuessingControlItems(guess_level);
     }
 
     public void GetAndSetNextGuess (boolean mark_first)
     {
+		int max_level = this.GetMaxGuessLevel();
+		int cnt_squares = this.GetSquaresAtGuessLevel(max_level);
+		if (cnt_squares > 0) 
+		{
+			guess_level = max_level+1;
+			myDrawHandler.SetGuessingControlItems (guess_level);
+		} else guess_level = max_level;
         Point next_guess = PuzzleSolver.GenerateNewGuess(this);
         int col = next_guess.x;
         int row = next_guess.y;
@@ -582,19 +588,21 @@ public class PBNPuzzle {
                     "Square row col " + row + " " + col + " already FILLED or EMPTY");
             return;
         }
-        puzzle[row][col].SetStatus (PuzzleSquare.SquareStatus.FILLED, this.GetGuessLevel());
+        puzzle[row][col].SetStatus (PuzzleSquare.SquareStatus.FILLED, guess_level);
         if (mark_first) puzzle[row][col].SetSpecialMarked(true);
         puzzle_backup[row][col].CloneStatusFromSquare(puzzle[row][col]);
     }
 
     public void SetAutoMarkStartFromControls (boolean is_selected)
     {
-        mark_first_selection = false;
+		mark_first_selection = is_selected;
+/*        mark_first_selection = false;
         if (is_selected)
         {
             int numsquares = GetSquaresAtGuessLevel(guess_level);
             if (numsquares == 0) mark_first_selection = true;
         }
+*/
     }
 
     public void SetGuessLevel (int level)
@@ -991,6 +999,7 @@ public class PBNPuzzle {
 	{
         if (col < 0 || col >= cols || row < 0 || row >= rows) return;
         int priorStatus = puzzle[row][col].GetStatusAsInt();
+//		boolean was_marked = puzzle[row][col].IsSpecialMarked();
         Selection oldSelection = new Selection (curSelection);
         curSelection.setRowColSelected(row, col, puzzle[row][col].GetStatusAsInt());
         lastSquareSelection.copySelection (curSelection);
@@ -998,6 +1007,7 @@ public class PBNPuzzle {
         if (sameSelection) 
         {
             CyclePuzzle (row, col);
+//			boolean is_marked = puzzle[row][col].IsSpecialMarked();
             curSelection.setRowColSelected(row, col, puzzle[row][col].GetStatusAsInt());
             lastSquareSelection.copySelection (curSelection);
             AddToStack(curSelection, priorStatus, true);
@@ -1015,12 +1025,17 @@ public class PBNPuzzle {
         {
             // set new status AND apply current guess level
             puzzle[row][col].CycleStatus();
-            puzzle[row][col].SetGuessLevel (guess_level);
-            if (mark_first_selection)
-            {
-                puzzle[row][col].SetSpecialMarked (true);
-                mark_first_selection = false;
-            }
+			if (puzzle[row][col].IsUnknown())
+			{
+				boolean is_marked = puzzle[row][col].IsSpecialMarked();
+				if (is_marked) puzzle[row][col].SetSpecialMarked(false);
+			} else
+			{
+				puzzle[row][col].SetGuessLevel (guess_level);
+				int cnt = this.GetSquaresAtGuessLevel(guess_level);
+				if (mark_first_selection && cnt == 1)
+					puzzle[row][col].SetSpecialMarked (true);
+			}
             puzzle_backup[row][col].CloneStatusFromSquare(puzzle[row][col]);
         }
 	}
@@ -1037,29 +1052,25 @@ public class PBNPuzzle {
 	public void RemoveMarks ()
 	{
 		int status;
-		boolean changed;
         boolean first = true;
 		for (int i=0; i<rows; i++)
 		{
 			for (int j=0; j<cols; j++)
 			{
-				changed = false;
-				status = puzzle[i][j].GetStatusAsInt();
-                int prior_status = status;
-                puzzle[i][j].SetMarkedStatus(false);
-                changed = (prior_status != puzzle[i][j].GetStatusAsInt());
-				if (changed)
+				boolean is_marked = puzzle[i][j].IsSpecialMarked();
+				if (is_marked)
 				{
-                    puzzle_backup[i][j].CloneStatusFromSquare(puzzle[i][j]);
-					DrawPuzzleBox (null, i, j, false);
-                    Selection sel = new Selection ();
-                    sel.setRowColSelected(i, j, status);
-                    AddToStack (sel, prior_status, first);
-                    first = false;
+					int prior_status = puzzle[i][j].GetStatusAsInt();
+					puzzle[i][j].SetSpecialMarked(false);
+					status = puzzle[i][j].GetStatusAsInt();
+					puzzle_backup[i][j].CloneStatusFromSquare(puzzle[i][j]);
+					Selection sel = new Selection();
+					sel.setRowColSelected(i, j, status);
+					AddToStack (sel, prior_status, first);
+					first = false;
 				}
 			}
 		}
-		DrawPuzzleBoldLines(null);
 	}
 
 
@@ -1179,9 +1190,9 @@ public class PBNPuzzle {
         if (!assume_guess_wrong) guess_level = level - 1;
         else guess_level = level;
 		myDrawHandler.SetGuessingControlItems(guess_level);
-        mark_first_selection = false;
-        if (myDrawHandler.GetAutoMarkStart() && guess_level > 0
-            && GetSquaresAtGuessLevel(guess_level) == 0) mark_first_selection = true;
+//        mark_first_selection = false;
+//        if (myDrawHandler.GetAutoMarkStart() && guess_level > 0
+//            && GetSquaresAtGuessLevel(guess_level) == 0) mark_first_selection = true;
 		return;
 	}
 	
@@ -1233,7 +1244,8 @@ public class PBNPuzzle {
                     count++;
                 }
             }
-		DrawPuzzle(null, null);
+//		DrawPuzzle(null, null);
+		myDrawHandler.Redraw();
 		guess_level = 0;
         myDrawHandler.SetGuessingControlItems(guess_level);
 		return;

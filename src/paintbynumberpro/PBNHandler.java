@@ -255,7 +255,12 @@ public class PBNHandler implements Printable {
     {
         if (panel_rect == null) return;
         Dimension d = new Dimension (panel_rect.width, panel_rect.height);
-        if (myPuzzleFrame != null) myPuzzleFrame.getPanel().setPreferredSize (d);
+        if (myPuzzleFrame != null) 
+		{
+			PBNDrawPanel myPanel = myPuzzleFrame.getPanel();
+			myPanel.setPreferredSize (d);
+			myPanel.setSize(d);
+		}
     }
 
     private Selection GetCurrentSelection ()
@@ -266,6 +271,10 @@ public class PBNHandler implements Printable {
         cs = myPuzzle.GetCurrentSelection ();
         return cs;
     }
+	public void SetCurrentSelection (Point square)
+	{
+		myPuzzle.SetCurrentSelection(square.x, square.y);
+	}
 
     private Graphics GetCurrentGraphics ()
     {
@@ -300,7 +309,10 @@ public class PBNHandler implements Printable {
     {
         SetupDrawingRectangles();
         SetPreferredPanelSizes();
-        if (myPuzzleFrame != null) myPuzzleFrame.repaint();
+        if (myPuzzleFrame != null) 
+		{
+			myPuzzleFrame.repaint();
+		}
     }
 
     public PBNPuzzle GetThePuzzle () { return myPuzzle; }
@@ -443,7 +455,7 @@ public class PBNHandler implements Printable {
         // Create a little rectangle to draw the counter in
         x += 5;
         y -= 5;
-
+		
         Counter counterComponent = myFrame.getPanel().GetCounterComponent();
         counterComponent.SetCounter(num);
         counterComponent.MoveTo(x, y);
@@ -514,6 +526,31 @@ public class PBNHandler implements Printable {
 
         DrawSideMarkersAt (g, row, col);
     }
+	
+	public void HighlightClues (Graphics g, int row, int col, boolean highlight)
+    {
+ 		// recast Graphics to Graphics2D
+		if (g == null) g = GetCurrentGraphics();
+		Graphics2D g2D = (Graphics2D)g; 
+
+        Stroke bs1 = new BasicStroke(1);
+		g2D.setStroke(bs1);
+
+		// set UL y location box to draw
+		int x = col*(BOX_SIZE-1) + puzzle_rect.x;
+		int y = row*(BOX_SIZE-1) + puzzle_rect.y;
+
+		// Draw boxes around associated col/row clues
+		if (highlight)
+			g2D.setColor (puzzleSelectColor);
+		else
+			g2D.setColor(backgroundColor);
+		g2D.drawRect(row_clue_rect.x, y+2,
+			row_clue_rect.width-2, BOX_SIZE-5);
+		g2D.drawRect(x+2, col_clue_rect.y-1,
+			BOX_SIZE-5, col_clue_rect.height-1);
+		g2D.setColor(Color.black);
+    }
 
     public void HighlightClues (Graphics g, int row, int col)
     {
@@ -530,11 +567,11 @@ public class PBNHandler implements Printable {
 		int y = row*(BOX_SIZE-1) + puzzle_rect.y;
 
 		// Draw boxes around associated col/row clues
-        Selection cs = GetCurrentSelection ();
-        if (cs.isBoxSelected(row, col))
-            g2D.setColor (puzzleSelectColor);
-        else
-            g2D.setColor(backgroundColor);
+		Selection cs = GetCurrentSelection ();
+		if (cs.isBoxSelected(row, col))
+			g2D.setColor (puzzleSelectColor);
+		else
+			g2D.setColor(backgroundColor);
 		g2D.drawRect(row_clue_rect.x, y+2,
 			row_clue_rect.width-2, BOX_SIZE-5);
 		g2D.drawRect(x+2, col_clue_rect.y-1,
@@ -1681,7 +1718,11 @@ public class PBNHandler implements Printable {
     
     public void RemoveMarks ()
     {
-		if (myPuzzle != null) myPuzzle.RemoveMarks();        
+		if (myPuzzle != null) 
+		{
+			myPuzzle.RemoveMarks();
+			Redraw();
+		}        
     }
 
     public void CommitGuesses ()
@@ -1758,7 +1799,11 @@ public class PBNHandler implements Printable {
 
     public void Redraw ()
     {
-        if (myPuzzleFrame != null) myPuzzleFrame.getPanel().repaint();
+        if (myPuzzleFrame != null) 
+		{
+			myPuzzleFrame.getPanel().repaint();
+			myPuzzleFrame.getPanel().RedrawCluesComponents();
+		}
     }
 
 
@@ -1831,7 +1876,7 @@ public class PBNHandler implements Printable {
 
     public void StartNewGuess ()
     {
-        if (myPuzzle != null) myPuzzle.StartNewGuessLevel (myControlsFrame.GetAutoMarkStart());
+        if (myPuzzle != null) myPuzzle.StartNewGuessLevel ();
     }
 
     public void GetAndSetNextGuess ()
@@ -1885,14 +1930,5 @@ public class PBNHandler implements Printable {
     { return myMessageWindow; }
     public static void HandleCloseMessageWindow ()
     {  myMessageWindow.setVisible(false); }
-    
-    public void HandleRefreshButton ()
-    {
-        if (myPuzzleFrame != null)
-        {
-            PBNDrawPanel myPanel = myPuzzleFrame.getPanel();
-            if (myPanel != null) myPanel.repaint();
-        }
-    }
 
 }

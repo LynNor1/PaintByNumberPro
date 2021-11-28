@@ -31,10 +31,15 @@ public class RowCluesComponent extends JComponent
         InitializeDimensionsForNumClues (1);
         setOpaque(true);
     }
-    
+	
+	public void ReinitializeDimensions ()
+	{
+		InitializeDimensionsForNumClues (num_clues);
+	}
+        
     private void InitializeDimensionsForNumClues (int num_clues)
     {
-        Dimension d = new Dimension (num_clues*myDrawHandler.GetClueWidth(), myDrawHandler.GetBoxSize());
+        Dimension d = new Dimension (num_clues*myDrawHandler.GetClueWidth()+4, myDrawHandler.GetBoxSize());
         setSize (d);
         setMaximumSize(d);
         setMinimumSize (d);
@@ -70,7 +75,7 @@ public class RowCluesComponent extends JComponent
         
         if (clues == null || clues.length < 1) return;
         
-        int clue_width = myDrawHandler.GetThePuzzle().GetClue_Width();
+        int clue_width = myDrawHandler.GetClueWidth();
         int box_size = myDrawHandler.GetBoxSize();   
 
         int x = 2;

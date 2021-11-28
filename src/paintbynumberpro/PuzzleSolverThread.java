@@ -185,7 +185,7 @@ public class PuzzleSolverThread extends Thread {
 			{
 			
             // Set up for a new guess (we'll mark the start of the guess ourselves)
-            puzzleToSolve.StartNewGuessLevel(false);
+            puzzleToSolve.StartNewGuessLevel();
             guess_level = puzzleToSolve.GetGuessLevel();
 
             // Pick our guess

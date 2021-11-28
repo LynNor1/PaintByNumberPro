@@ -557,6 +557,11 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
         AssumeGuessWrong_JCheckBox.setText("Assume guess was wrong");
         AssumeGuessWrong_JCheckBox.setToolTipText("After guess undone, inverts original assumption.  Next square selected is your new guess.");
         AssumeGuessWrong_JCheckBox.setEnabled(false);
+        AssumeGuessWrong_JCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                AssumeGuessWrong_JCheckBoxActionPerformed(evt);
+            }
+        });
 
         CommitGuesses_JButton.setText("Commit Guesses");
         CommitGuesses_JButton.setEnabled(false);
@@ -983,7 +988,10 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
     }//GEN-LAST:event_SaveSettings_JButtonActionPerformed
 
     private void AutoMarkStart_JCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AutoMarkStart_JCheckBoxActionPerformed
-        // TODO add your handling code here:
+        if (AssumeGuessWrong_JCheckBox.isSelected())
+			AutoMarkStart_JCheckBox.setSelected(true);
+		PBNPuzzle myPuzzle = myDrawHandler.GetThePuzzle();
+		if (myPuzzle != null) myPuzzle.SetAutoMarkStartFromControls(AutoMarkStart_JCheckBox.isSelected());
     }//GEN-LAST:event_AutoMarkStart_JCheckBoxActionPerformed
 
     private void AutoSave_JCheckBoxActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_AutoSave_JCheckBoxActionPerformed
@@ -1010,8 +1018,13 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
     }//GEN-LAST:event_Stop_JButtonActionPerformed
 
     private void Refresh_JButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Refresh_JButtonActionPerformed
-        if (myDrawHandler != null) myDrawHandler.HandleRefreshButton ();
+        if (myDrawHandler != null) myDrawHandler.Redraw ();
     }//GEN-LAST:event_Refresh_JButtonActionPerformed
+
+    private void AssumeGuessWrong_JCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AssumeGuessWrong_JCheckBoxActionPerformed
+		// This option doesn't work unless the Auto Mark Start option is also selected
+		if (AssumeGuessWrong_JCheckBox.isSelected()) AutoMarkStart_JCheckBox.setSelected(true);
+    }//GEN-LAST:event_AssumeGuessWrong_JCheckBoxActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
