@@ -314,6 +314,14 @@ public class BetterPuzzleSolver {
 			
 			return (extent_end - extent_start + 1);
 		}
+		public int GetMaxGuessLevel (PuzzleSquare[] squares)
+		{
+			int guess_level = 0;
+			for (int i=start; i<=end; i++)
+				if (squares[i].GetGuessLevel() > guess_level)
+					guess_level = squares[i].GetGuessLevel();
+			return guess_level;
+		}
 		public void RemoveClueIndexFromClueList (int index)
 		{
 			ArrayList<Clue2> newList = new ArrayList();
@@ -534,7 +542,7 @@ public class BetterPuzzleSolver {
 			}
 						
 			// This is temporarily added in for debugging
-			if (do_debug && something_changed && !PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true, do_debug))
+			if (do_debug && something_changed && !PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true, do_debug, true))
 			{
 				System.out.println ("Puzzle check failed after row " + row + ":\n");
 				System.out.println ("Clues:");
@@ -591,7 +599,7 @@ public class BetterPuzzleSolver {
 			}
 			
 			// This is temporarily added in for debugging
-			if (do_debug && something_changed && !PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true, do_debug))
+			if (do_debug && something_changed && !PuzzleSolver.CheckPuzzleSoFar (myPuzzle, true, do_debug, true))
 			{
 				System.out.println ("Puzzle check failed after column " + col + ":\n");
 				System.out.println ("Clues:");
@@ -3252,7 +3260,7 @@ public class BetterPuzzleSolver {
 					// than the current clue value, then we have a problem!
 					if (uncertainty < clue_val && b.GetLength() > clue_val)
 						throw new CannotFitSolutionException ("Clue " + clue_idx + " is close enough to start of Blob, but Blob size is too big");
-
+						
 					// Blob can be attached to current clue
 					if (uncertainty < clue_val)
 					{
@@ -3561,7 +3569,57 @@ public class BetterPuzzleSolver {
 	public boolean CanSolutionFit (PBNPuzzle myPuzzle, boolean is_row, int row_or_col) 
 	{
 		PuzzleSquare[] possible_sqs = PossibleSolutionThatFits (myPuzzle, is_row, row_or_col);
-		return (possible_sqs != null);
+		if (possible_sqs == null) return false;
+		// let's double-check this possible solution
+		boolean does_work = DoubleCheckSolution (myPuzzle, possible_sqs, is_row, row_or_col);
+		return (does_work);
+	}
+	
+	private boolean DoubleCheckSolution (PBNPuzzle myPuzzle, PuzzleSquare[] squares, boolean is_row, int row_or_col)
+	{
+		// get the clues we need
+		int[] clues;
+		int Nclues;
+		if (is_row)
+		{
+			clues = myPuzzle.GetRow_Clues(row_or_col);
+			Nclues = myPuzzle.GetRow_NClues(row_or_col);
+		} else
+		{
+			clues = myPuzzle.GetCol_Clues(row_or_col);
+			Nclues = myPuzzle.GetCol_NClues(row_or_col);
+		}
+		
+		// get the # of columns or rows
+		int N;
+		if (is_row)
+			N = myPuzzle.GetCols();
+		else
+			N = myPuzzle.GetRows();
+		
+		// debug output
+		boolean do_debug = false;
+		if (do_debug)
+		{
+			System.out.println (DumpClues (clues));
+			System.out.println (DumpSquares (squares));
+			noop();
+		}
+		
+		// Get all the Blobs in the squares
+		ArrayList<Blob> allBlobs = GetAllBlobs (squares, 0, N-1);
+		
+		// We should have the same number of clues as Blobs
+		if (Nclues != allBlobs.size()) return false;
+		
+		// We should be able to go through each Blob and Clue and their lengths/values should match
+		for (int i=0; i<Nclues; i++)
+		{
+			if (clues[i] != allBlobs.get(i).GetLength()) return false;
+		}
+		
+		// If we're here, then we got a good solution
+		return true;
 	}
 	
 	private ArrayList<Range> GetAllRangesInExtent (PuzzleSquare[] squares, int extent_start, int extent_end)

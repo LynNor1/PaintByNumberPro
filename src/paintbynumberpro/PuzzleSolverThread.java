@@ -86,7 +86,7 @@ public class PuzzleSolverThread extends Thread {
                 if (success && (prev_num_knowns != num_knowns))
 				{
 //					System.out.println ("CheckPuzzleSoFar...");
-                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
+                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false, false);
 				}
 
                 keep_edge_processing = success && (prev_num_knowns != num_knowns);
@@ -104,7 +104,7 @@ public class PuzzleSolverThread extends Thread {
                 if (success && (prev_num_knowns != num_knowns))
 				{
 //					System.out.println ("CheckPuzzleSoFar...");
-                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
+                    success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false, false);
 				}
 
                 keep_processing = success && (prev_num_knowns != num_knowns);
@@ -209,7 +209,7 @@ public class PuzzleSolverThread extends Thread {
             RedrawFrame();
 
             // see if we've created any errors
-            boolean good_so_far = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
+            boolean good_so_far = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false, false);
 
             // If no errors, then Iterate
             if (good_so_far) good_so_far = IterateOnceUntilErrorOrNoChange (guess_level);
@@ -237,7 +237,7 @@ public class PuzzleSolverThread extends Thread {
                 puzzleToSolve.SetGuessLevel(level);
 
                 // see if we've created any errors simply by undoing the last guess
-                good_so_far = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false);
+                good_so_far = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false, false);
 
                 // If no errors, then Iterate
                 if (good_so_far)

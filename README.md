@@ -164,7 +164,9 @@ If you think you've solved the puzzle and you want to see if it is correct, clic
 
 ### Hints
 
-If you need a hint, click on the `Give Me a Clue!` button.  The code will look for a square where it thinks it knows if it should be filled or empty and will tell you where that square is.  The current square will also be moved to this suggested square and will be outlined in cyan.  Again, this is based on your current solution and **not** on the actual solution (in case they are different).
+If you need a hint, click on the `Give Me a Clue!` button.  The program will first check for any errors in your solution so far.  If no errors are found, then program will look for a square where it thinks it knows if it should be filled or empty and will tell you where that square is.  The current square will also be set to this suggested square and will be outlined in cyan.  Again, this is based on your current solution and **not** necessarily on the actual solution (in case they are different).
+
+To generate a clue, the program first runs `Process edges` and then runs `Process inner puzzle` on the rows and columns.  (You won't be able to see the results of this processing.) The first square that differs (from top to bottom, left to right) between its solution and your solution so far is the square that is suggested to you.
 
 ## Auto-Solving the Puzzle
 

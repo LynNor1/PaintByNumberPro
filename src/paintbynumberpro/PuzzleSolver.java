@@ -197,10 +197,12 @@ public class PuzzleSolver extends Thread {
     // Code to check puzzle solution or status so far
     // ----------------------------------------------
 
-	public static boolean CheckPuzzleSoFar (PBNPuzzle myPuzzle, boolean for_solver, boolean do_debug)
-	{ return CheckPuzzleSoFar (myPuzzle, for_solver, null, do_debug); }
+	public static boolean CheckPuzzleSoFar (PBNPuzzle myPuzzle, boolean for_solver, 
+			boolean do_debug, boolean suppress_success_dialog)
+	{ return CheckPuzzleSoFar (myPuzzle, for_solver, null, do_debug, suppress_success_dialog); }
 	
-    public static boolean CheckPuzzleSoFar (PBNPuzzle myPuzzle, boolean for_solver, PuzzleSolverThread theThread, boolean do_debug)
+    public static boolean CheckPuzzleSoFar (PBNPuzzle myPuzzle, boolean for_solver, 
+			PuzzleSolverThread theThread, boolean do_debug, boolean suppress_success_dialog)
     {
         // Note: If the auto-solver is running (i.e. for_solver is TRUE), then
         // we don't want to see the error messages
@@ -235,7 +237,7 @@ public class PuzzleSolver extends Thread {
                 return false;
             }
 
-        if (!for_solver)
+        if (!for_solver && !suppress_success_dialog)
             PaintByNumberPro.HandleMessage ("Check Puzzle",
                 "Your puzzle looks good so far!");
 

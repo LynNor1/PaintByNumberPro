@@ -31,6 +31,7 @@ public class PBNDrawPanel extends JLayeredPane implements MouseListener,
     private boolean draggingFilledSquares = false;
 	private boolean is_dragging = false;
     private int num_draggingFilledSquares = 0;
+	private boolean ignore_next_floating_clues_repaint = false;
 	
 	PBNDrawPanel(PBNHandler theHandler)
 	{
@@ -97,22 +98,33 @@ public class PBNDrawPanel extends JLayeredPane implements MouseListener,
 		if (myPuzzle != null && myDrawHandler != null)
         {
 			myDrawHandler.DrawPuzzle (g, null, false);
-            RedrawCluesComponents ();
+            if (!ignore_next_floating_clues_repaint) 
+			{
+				boolean did_redraw = RedrawCluesComponents ();	// redrawing clues components triggers another
+				if (did_redraw) ignore_next_floating_clues_repaint = true;		// request to redraw this PBNDrawPanel.  We
+																// don't want to redraw the clues components
+																// yet again.
+			} else
+				ignore_next_floating_clues_repaint = false;
         }
 	}
     
-    public void RedrawCluesComponents ()
+    public boolean RedrawCluesComponents ()
     {
+		boolean something_redrew = false;
         if (myColCluesComponent != null && myColCluesComponent.isVisible())
 		{
 			myColCluesComponent.ReinitializeDimensions();
             myColCluesComponent.repaint();
+			something_redrew = true;
 		}
         if (myRowCluesComponent != null && myRowCluesComponent.isVisible())
 		{
 			myRowCluesComponent.ReinitializeDimensions();
             myRowCluesComponent.repaint();    
+			something_redrew = true;
 		}
+		return something_redrew;
     }
 
     public void ModeChanged ()
@@ -393,10 +405,10 @@ public class PBNDrawPanel extends JLayeredPane implements MouseListener,
             {
                 // If mouse-up in same square as mouse-down, then call mouseClicked()
                 if (myPuzzleRectSquare.x == mouseDownPuzzleRectSquare.x &&
-                    myPuzzleRectSquare.y == mouseDownPuzzleRectSquare.y)
+                    myPuzzleRectSquare.y == mouseDownPuzzleRectSquare.y) {
                     if (!is_dragging) myDrawHandler.MouseClickXY(ev.getPoint());
                 // Finalize changes
-                else if(myPuzzleRectSquare.x == mouseDownPuzzleRectSquare.x)
+				} else if(myPuzzleRectSquare.x == mouseDownPuzzleRectSquare.x)
                 {
                     int x = myPuzzleRectSquare.x;
                     int starty, endy;
@@ -444,6 +456,7 @@ public class PBNDrawPanel extends JLayeredPane implements MouseListener,
         mouseDownPuzzleRectSquare = null;
         mouseDownSquareStatus = PuzzleSquare.StatusToInt(new PuzzleSquare(PuzzleSquare.SquareStatus.UNKNOWN));
         myDrawHandler.HideDrawCounter();
+		is_dragging = false;
     }
 
 	public void mouseExited (MouseEvent ev) {}

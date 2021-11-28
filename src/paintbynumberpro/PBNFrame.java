@@ -109,8 +109,8 @@ public class PBNFrame extends JFrame implements WindowListener {
 		myScrollPane = new JScrollPane (myPanel,
 			JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
 			JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        myScrollPane.getHorizontalScrollBar().addAdjustmentListener(myPanel);
-        myScrollPane.getVerticalScrollBar().addAdjustmentListener(myPanel);
+//        myScrollPane.getHorizontalScrollBar().addAdjustmentListener(myPanel);
+//        myScrollPane.getVerticalScrollBar().addAdjustmentListener(myPanel);
 		
 		// Add contentBox to contentPane
 		Container contentPane = getContentPane();
@@ -133,7 +133,7 @@ public class PBNFrame extends JFrame implements WindowListener {
         {
 			public void actionPerformed (ActionEvent ae)
 			{
-				if (myDrawHandler != null) myDrawHandler.CheckPuzzle();
+				if (myDrawHandler != null) myDrawHandler.CheckPuzzle(false);
 			}
         });
 

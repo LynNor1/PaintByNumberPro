@@ -53,7 +53,7 @@ public class PBNHandler implements Printable {
 
     // Font
     private Font myFont = null;
-
+	
     // Mode the program is running in
     public enum Mode { NORMAL, DRAWING, AUTO_SOLVE };
     public Mode myMode = Mode.NORMAL;
@@ -617,7 +617,7 @@ public class PBNHandler implements Printable {
 	
 	// Draw the contents of the puzzle panel
 	public void DrawPuzzle (Graphics g, Rectangle theRect, boolean for_printing)
-	{	        
+	{	
 		// recast Graphics to Graphics2D
 		if (g == null) g = GetCurrentGraphics ();
 		Graphics2D g2D = (Graphics2D)g;
@@ -1741,10 +1741,10 @@ public class PBNHandler implements Printable {
         if (myPuzzle != null) myPuzzle.clearPuzzle();
     }
 
-    public void CheckPuzzle ()
+	// return true if okay so far
+    public boolean CheckPuzzle (boolean suppress_success_dialog)
     {
-        PuzzleSolver.CheckPuzzleSoFar(myPuzzle, false, false);
-
+        return (PuzzleSolver.CheckPuzzleSoFar(myPuzzle, false, false, suppress_success_dialog));
     }
 
     public void CheckMySolution ()

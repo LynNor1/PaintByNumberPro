@@ -882,7 +882,7 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
     }//GEN-LAST:event_SaveAs_JButtonActionPerformed
 
     private void CheckForErrors_JButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CheckForErrors_JButtonActionPerformed
-        if (myDrawHandler != null) myDrawHandler.CheckPuzzle();
+        if (myDrawHandler != null) myDrawHandler.CheckPuzzle(false);
     }//GEN-LAST:event_CheckForErrors_JButtonActionPerformed
 
     private void Undo_JButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_Undo_JButtonActionPerformed
@@ -971,7 +971,13 @@ public class PBNControlsFrame extends javax.swing.JFrame implements WindowListen
     }//GEN-LAST:event_FixPuzzleClues_JButtonActionPerformed
 
     private void GiveMeAClue_JButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_GiveMeAClue_JButtonActionPerformed
-        if (myDrawHandler != null) myDrawHandler.GiveMeAClue();
+        if (myDrawHandler != null) 
+		{
+			// First check if there's an error
+			if (myDrawHandler.CheckPuzzle(true))
+				// Get a clue if no error so far
+				myDrawHandler.GiveMeAClue();
+		}
     }//GEN-LAST:event_GiveMeAClue_JButtonActionPerformed
 
     private void StartNewGuess_JButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StartNewGuess_JButtonActionPerformed

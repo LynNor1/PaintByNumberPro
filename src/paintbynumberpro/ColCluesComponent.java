@@ -78,7 +78,7 @@ public class ColCluesComponent extends JComponent
 //        }
         
 //        myDrawHandler.GetMessageWindow().AddMessage ("ColCluesComponent->paintComponent() drawing at ul x y " + ul_x + " " + ul_y);
-            
+		
 		Graphics2D g2D = (Graphics2D)g;
         Font f = myDrawHandler.GetCurrentFont();
 		g2D.setFont(f);
