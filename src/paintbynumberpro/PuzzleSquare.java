@@ -32,7 +32,7 @@ public class PuzzleSquare {
     public enum SquareStatus { UNKNOWN, FILLED, EMPTY };
 
     // Internal state of the square
-    private boolean is_special_marked = false;
+    private boolean is_special_marked = false;	// see comments for MARKED and SPECIAL_MARKED above
     private boolean is_marked = false;
     private int guess_level = 0;
     private SquareStatus status = SquareStatus.UNKNOWN;
@@ -112,14 +112,16 @@ public class PuzzleSquare {
         {
             SetSpecialMarked(true);
             tmp -= SPECIAL_MARKED;
-        }
+        } else
+			SetSpecialMarked(false);
 
         // check if marked
         if (tmp >= MARKED)
         {
             SetMarkedStatus(true);
             tmp -= MARKED;
-        }
+        } else
+			SetMarkedStatus(false);
 
         // extract the guess level
         if (tmp != UNKNOWN)

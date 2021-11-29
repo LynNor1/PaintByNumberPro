@@ -903,7 +903,7 @@ public class PBNPuzzle {
 			
 			// Cycle puzzle
 			if (row >= 0 && row < rows && col >= 0 && col < cols)
-				CyclePuzzle (row, col);
+				CyclePuzzle (row, col);			
 			// Cycle column clue
 			else if (col_clue >= 0 && col_clue < cols)
 				CycleColClue (col_clue, clue_num);
@@ -1057,10 +1057,11 @@ public class PBNPuzzle {
 		{
 			for (int j=0; j<cols; j++)
 			{
-				boolean is_marked = puzzle[i][j].IsSpecialMarked();
+				boolean is_marked = puzzle[i][j].IsMarked() || puzzle[i][j].IsSpecialMarked();
 				if (is_marked)
 				{
 					int prior_status = puzzle[i][j].GetStatusAsInt();
+					puzzle[i][j].SetMarkedStatus(false);
 					puzzle[i][j].SetSpecialMarked(false);
 					status = puzzle[i][j].GetStatusAsInt();
 					puzzle_backup[i][j].CloneStatusFromSquare(puzzle[i][j]);
