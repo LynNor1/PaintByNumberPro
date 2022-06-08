@@ -506,6 +506,7 @@ public class BetterPuzzleSolver {
 		// ----------------------------
 		// Loop over all rows to bottom
 		// ----------------------------
+//		System.out.println ("    Processing all rows...");
 		for (int row=0; row<rows; row++)
 		{
 			
@@ -563,9 +564,10 @@ public class BetterPuzzleSolver {
 		// -----------------------------------
 		// Loop over all columns left to right
 		// -----------------------------------
+//		System.out.println ("    Processing all cols...");		
 		for (int col=0; col<cols; col++)
 		{
-			
+					
 			// Gather up the clues
 			int [] clues = PuzzleSolver.GetCluesForColFromPuzzle(myPuzzle, col);
 			
@@ -585,7 +587,7 @@ public class BetterPuzzleSolver {
 //			System.out.println ("Processing col " + col);
 			
 			// Process this column
-			ProcessLine (clues, squares, guess_level, false, col, false);
+			ProcessLine (clues, squares, guess_level, false, col, do_debug);
 			int count_unknowns_after = CountUnknownSquares (squares);			
 			
 			// See if something has changed
@@ -2040,15 +2042,576 @@ public class BetterPuzzleSolver {
 				if (squares[isq].IsUnknown())
 					squares[isq].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
 		}
-
+		
 		if (high_level_debug)
 		{
 			System.out.println (DumpSquaresWithClues (squares, myClues));
 			noop();
+		}		
+		
+		// --------------------------------------------------------------------
+		// Next step: Look for sequences of anchored blobs, correlate them with
+		// the clues, and then process the spaces in-between
+		// --------------------------------------------------------------------
+		if (CountUnknownSquares(squares) > 0)
+		{
+			// Find all Blobs
+			ArrayList<Blob> blobs = GetAllBlobs(squares, 0, squares.length-1);
+			
+			// Create lists of blob sequences where all blobs in the sequence
+			// are anchored and are separated by only Xs (no unknowns)
+			ArrayList<Blob> blob_sequence = new ArrayList();
+			ArrayList<ArrayList<Blob>> sequences = new ArrayList();
+			
+			// Loop over blobs
+			Blob prev_b = null;
+			for (Blob b : blobs)
+			{
+				// break the chain of blobs if this one is not anchored
+				if (!b.IsFullyAnchored())
+				{
+					// add the current blob_sequence (if any) to the list
+					// of sequences
+					if (!blob_sequence.isEmpty()) 
+						sequences.add(blob_sequence);
+					// reset the blob_sequence
+					blob_sequence = new ArrayList();
+				}
+				else
+				{
+					// add to the blob sequence if there are no spaces between
+					// it and the previous blob					
+					if (prev_b == null)
+						blob_sequence.add(b);
+					else
+					{
+						// check space between end of previous blob and
+						// start of current blob
+						int end_prev = prev_b.end;
+						int start_curr = b.start;
+						int unknowns = 0;
+						for (int i=end_prev+1; i<start_curr; i++)
+							if (squares[i].IsUnknown())
+									unknowns++;
+						
+						// if there are no unknowns or the blob sequence is
+						// empty, then add this blob to the sequence
+						if (unknowns == 0 || blob_sequence.isEmpty())
+							blob_sequence.add(b);
+						
+						// if there are unknowns, then break the sequence and
+						// start over with a new sequence
+						else
+						{
+							if (!blob_sequence.isEmpty())
+								sequences.add(blob_sequence);
+							blob_sequence = new ArrayList();
+							blob_sequence.add(b);
+						}
+					}
+				}
+				
+				// get ready for next blob
+				prev_b = b;
+			}
+
+			// be sure to add that last blob_sequence, if it isn't empty
+			if (!blob_sequence.isEmpty())
+				sequences.add(blob_sequence);
+			
+			if (do_debug)
+			{
+				System.out.println ("Locate sequences of anchored blobs");
+				System.out.println (DumpSquaresWithBlobSequences (squares, sequences));
+				noop();			
+			}
+
+			// -------------------------------------------------------------
+			// Next step is to see correlate with sequence of clue values to 
+			// see if we have any unique matches
+			// -------------------------------------------------------------
+			if (!sequences.isEmpty())
+			{
+				int num_sequences = sequences.size();
+				int[] start_clue_idx_for_sequence = new int[num_sequences];
+				int num_clues_left = myClues.GetNumClues()-2;
+				int first_clue_idx = 0;
+				int num_unmatched = 0;
+				
+				// Process each sequence, looking for a unique starting clue
+				// index for that sequence
+				for (ArrayList<Blob> blob_seq : sequences)
+				{
+					// get number of blobs in the sequence
+					int num_blobs = blob_seq.size();
+					
+					// get the blob_seq index in sequences
+					int iseq = sequences.indexOf(blob_seq);
+					
+					// get number of starting clues to check against
+					// (remember there's an extra clue at beginning and end of the list)
+					int num_starts = num_clues_left - num_blobs + 1;
+					
+					// let's see how many matching sequences in the
+					// clues
+					int num_matches = 0;
+					for (int start_idx=0; start_idx<num_starts; start_idx++)
+					{
+						boolean does_match = true;
+						for (int i=0; i<num_blobs; i++)
+						{
+							int clue_idx = start_idx + first_clue_idx + i + 1;
+							Blob b = blob_seq.get(i);
+							// check if clue value matches blob size
+							if (myClues.clue_list[clue_idx].value != b.GetLength())
+								does_match = false;
+							// check if blob can be located within this clue's extent
+							if (!(b.start >= myClues.clue_list[clue_idx].start_extent &&
+								  b.end   <= myClues.clue_list[clue_idx].end_extent))
+								does_match = false;
+						}
+						if (does_match)
+						{
+							num_matches++;
+							start_clue_idx_for_sequence[iseq] = start_idx + first_clue_idx;
+						}
+					}
+					
+					// if we have one match, then we'll keep the start clue index
+					if (num_matches != 1)
+					{
+						start_clue_idx_for_sequence[iseq] = -1;
+						first_clue_idx += num_blobs;
+						num_clues_left -= num_blobs;
+						num_unmatched++;
+					} else
+					{
+						first_clue_idx = start_clue_idx_for_sequence[iseq] + num_blobs;
+						num_clues_left = myClues.clue_list.length - 2 - first_clue_idx;
+					}
+				}
+
+				// See if I can locate any orphaned blob sequences now that we have
+				// some anchored sequences (possibly)
+				if (num_unmatched > 0 && num_sequences > 1)
+				{
+					for (ArrayList<Blob> blob_seq : sequences)
+					{
+						// get number of blobs in the sequence
+						int num_blobs = blob_seq.size();
+
+						// get the blob_seq index in sequences
+						int iseq = sequences.indexOf(blob_seq);
+						
+						// reprocess this sequence if orphaned
+						if (start_clue_idx_for_sequence[iseq] < 0)
+						{
+							// establish first possible clue index
+							first_clue_idx = 0;
+							if (iseq > 0)
+							{
+								for (int iseq_left=0; iseq_left<iseq; iseq_left++)
+								{
+									ArrayList<Blob> blob_seq_left = sequences.get(iseq_left);
+									int num_blobs_left = blob_seq_left.size();
+									if (start_clue_idx_for_sequence[iseq_left] >= 0)
+										first_clue_idx = start_clue_idx_for_sequence[iseq_left] + num_blobs_left;
+									else
+										first_clue_idx += num_blobs_left;
+								}
+							}
+							
+							// establish last possible clue index
+//							int last_clue_idx = myClues.clue_list.length-2 - num_blobs;
+							int last_clue_idx = myClues.clue_list.length-2 - 1;
+							if (iseq < (num_sequences-1))
+							{
+								for (int iseq_right=num_sequences-1; iseq_right>iseq; iseq_right--)
+								{
+									ArrayList<Blob> blob_seq_right = sequences.get(iseq_right);
+									int num_blobs_right = blob_seq_right.size();
+									if (start_clue_idx_for_sequence[iseq_right] >= 0)
+										last_clue_idx = start_clue_idx_for_sequence[iseq_right] - 1;
+									else
+										last_clue_idx -= num_blobs_right;									
+								}
+							}
+
+							// Now search between these clue bounds to see if
+							// we can uniquely locate this current blob sequence
+							// (now that we've pinned down the other blob sequences)
+							int num_search_clues = last_clue_idx - first_clue_idx + 1;
+							int num_starts = num_search_clues - num_blobs + 1;						
+							int num_matches = 0;
+							for (int i=0; i<num_starts; i++)
+							{
+								boolean does_match = true;
+								for (int nb=0; nb<num_blobs; nb++)
+								{
+									int clue_idx = i+first_clue_idx+nb;
+									Blob b = blob_seq.get(nb);
+									if (b.GetLength() != myClues.clue_list[clue_idx+1].value)
+										does_match = false;
+									if (!(b.start >= myClues.clue_list[clue_idx+1].start_extent &&
+										  b.end   <= myClues.clue_list[clue_idx+1].end_extent))
+										does_match = false;
+								}
+								if (does_match) 
+								{
+									num_matches++;
+									start_clue_idx_for_sequence[iseq] = i+first_clue_idx;
+								}
+							}
+							if (num_matches > 1)
+								start_clue_idx_for_sequence[iseq] = -1;
+						}
+					}					
+				}
+			
+				if (do_debug)
+				{
+					System.out.println ("Locate sequences of anchored blobs");
+					System.out.println (DumpSquaresWithBlobSequencesAndClueMatches (squares, sequences,
+							myClues, start_clue_idx_for_sequence));
+					noop();			
+				}
+				
+				// -----------------------------------------------------------------
+				// Now we need to process the spaces between the sequences for which
+				// there are a unique set of matching clues
+				// -----------------------------------------------------------------
+				
+				// Process spaces between sequential anchored sequences
+				int num_seq = sequences.size();
+				if (num_seq > 1)
+				{
+					for (int iseq=0; iseq<(num_seq-1); iseq++)
+					{
+						// Only process if this sequence and next have been uniquely
+						// located within the clues
+						if (start_clue_idx_for_sequence[iseq] >= 0 && 
+							start_clue_idx_for_sequence[iseq+1] >= 0)
+						{
+							ArrayList<Blob> seq1 = sequences.get(iseq);
+							ArrayList<Blob> seq2 = sequences.get(iseq+1);
+							
+							int num_blobs1 = seq1.size();
+							
+							int last_clue_idx1 = start_clue_idx_for_sequence[iseq] + num_blobs1 - 1;
+							int first_clue_idx2 = start_clue_idx_for_sequence[iseq+1];
+							
+							Blob last_blob1 = seq1.get(num_blobs1-1);
+							Blob first_blob2 = seq2.get(0);
+														
+							ProcessSpacesBetweenAnchoredBlobSequences (squares,
+										myClues, last_clue_idx1, first_clue_idx2, 
+										last_blob1.end+2, first_blob2.start-2, guess_level);
+						}
+					}
+				}
+				
+				// Process all anchored sequences for clues to left and right
+				for (int iseq=0; iseq<num_seq; iseq++)	
+				{
+					if (start_clue_idx_for_sequence[iseq] >= 0)
+					{
+						ArrayList<Blob> blob_seq = sequences.get(iseq);
+						int num_blobs = blob_seq.size();
+						Blob first_blob = blob_seq.get(0);
+						Blob last_blob = blob_seq.get(num_blobs-1);
+						
+						ProcessBlobsToLeftAndRightOfAnchoredBlobSequence (squares,
+							myClues, start_clue_idx_for_sequence[iseq], 
+							start_clue_idx_for_sequence[iseq]+num_blobs-1, 
+							first_blob.start-1, last_blob.end+1, guess_level);
+					}
+				}
+				
+				// Process the space to the left of the 1st sequence (if uniquely located)
+				if (start_clue_idx_for_sequence[0] >= 0)
+				{
+					Blob first_blob = sequences.get(0).get(0);
+					ProcessSpacesBetweenAnchoredBlobSequences (squares,
+								myClues, -1, start_clue_idx_for_sequence[0], 
+								0, first_blob.start-2, guess_level);
+				}
+				
+				// Process the space to the right of the last sequence (if uniquely located)
+				if (start_clue_idx_for_sequence[num_seq-1] >= 0)
+				{
+					ArrayList<Blob> last_seq = sequences.get(num_seq-1);
+					int num_blobs = last_seq.size();
+					Blob last_blob = last_seq.get(num_blobs-1);
+					int num_clues = myClues.GetNumClues()-2;
+					ProcessSpacesBetweenAnchoredBlobSequences (squares,
+								myClues, start_clue_idx_for_sequence[num_seq-1] + num_blobs - 1, num_clues, 
+								last_blob.end+2, N-1, guess_level);
+				}
+				
+				if (do_debug)
+				{
+					System.out.println ("After anchored blob sequence processing:");
+					System.out.println (DumpSquares (squares));
+					noop();			
+				}				
+				
+			}
+			
 		}
 		
 		
 		return squares;
+	}
+	
+	// Note in the following, the last_ and first_clue indices are the 0-based
+	// indices of the clues.  Noting that myClues contains an extra clue at the beginning
+	// and end of the sequence, the actual clue index to use is last_clue_left+1 and
+	// first_clue_right+1.  Also, these are the clue indices that are accounted for.
+	// We are going to process for the clues *between* these clues, if any.
+	// 
+	// And the space we're going to process starts at start_square and ends
+	// at end_square (inclusive).  These squares should not be part of the 
+	// anchored blob and its adjacent EMPTY squares.  It should represent the
+	// space in-between those anchored blobs.
+	//
+	// If we're going to process the space between the right edge of the puzzle
+	// and the 0th clue, then set last_clue_left to -1.
+	//
+	// If we're going to process the space between the left edge of the puzzle
+	// and the N-1th clue, then set the first_clue_right to N.  where N is the
+	// number of actual clues.
+	private void ProcessSpacesBetweenAnchoredBlobSequences (PuzzleSquare[] squares,
+			Clues2 myClues, int last_clue_left, int first_clue_right, 
+			int start_square, int end_square, int guess_level)
+	{
+		if (start_square > end_square) return;
+		
+		// number of clues in-between anchored blob sequences
+		int num_clues_between = first_clue_right - last_clue_left - 1;
+		
+		// Easy process when num_clues_between = 0
+		if (num_clues_between == 0)
+		{
+			for (int isq=start_square; isq<=end_square; isq++)
+				if (squares[isq].IsUnknown())
+					squares[isq].SetStatus (PuzzleSquare.SquareStatus.EMPTY, guess_level);
+			return;
+		}
+		
+		// Let's set up the clues to process between anchored sequences (inclusive)
+		int first_clue_idx = last_clue_left+1;
+		int last_clue_idx = first_clue_right-1;
+		int num_clues = myClues.clue_list.length-2;
+		
+		// Count total number of squares needed, assuming uninterrupted sequence of
+		// UNKNOWN spaces
+		int total_needed = 0;
+		for (int idx=first_clue_idx; idx<=last_clue_idx; idx++)
+			total_needed += myClues.clue_list[idx+1].value + 1;
+		total_needed--;
+		
+		// Count number of spaces that are FILLED
+		int count_filled = 0;
+		for (int isq=start_square; isq<=end_square; isq++)
+			if (squares[isq].IsFilled()) count_filled++;		
+		
+		// Easy process when there is a single sequence of UNKNOWN spaces with no FILLED spaces
+		if (count_filled == 0)
+		{
+			int first_unknown = -1;
+			int last_unknown = -1;
+			for (int isq=start_square; isq<=end_square; isq++)
+			{
+				if (squares[isq].IsUnknown())
+				{
+					if (first_unknown < 0) first_unknown = isq;
+					last_unknown = isq;
+				}
+			}
+			if (first_unknown >= 0 && last_unknown >= 0)
+			{
+				boolean interrupted = false;
+				for (int isq=first_unknown; isq<=last_unknown; isq++)
+				{
+					if (!squares[isq].IsUnknown()) interrupted = true;
+				}
+				if (!interrupted)
+				{
+					// Fill in squares (if possible) based on sequence of
+					// clues 
+					int extra_spaces = (last_unknown-first_unknown+1) - total_needed;
+					if (extra_spaces < 0) return;
+
+					// See if we can fill in any squares given our clues
+					boolean can_fill = false;
+					for (int idx=first_clue_idx; idx<=last_clue_idx; idx++)
+						if (myClues.clue_list[idx+1].value > extra_spaces)
+							can_fill = true;
+
+					// If we can fill in any spaces, let's do it
+					if (can_fill)
+					{
+						// Fill from left to right
+						int isq = first_unknown;
+						for (int idx=first_clue_idx; idx<=last_clue_idx; idx++)
+						{
+							int clue_val = myClues.clue_list[idx+1].value;
+							if (clue_val > extra_spaces)
+							{
+								int fill_spaces = clue_val - extra_spaces;
+								isq += extra_spaces;
+								for (int ii=0; ii<fill_spaces; ii++)
+								{
+									if (isq >= squares.length) return;
+									if (squares[isq].IsUnknown())
+										squares[isq].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level);
+									isq++;
+								}
+								isq++;
+							} else
+								isq += clue_val+1;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	// Process any blobs that are directly to the left and right of the anchored blob
+	// sequence.  Anchored Blob sequence spans start_square to end_square.
+	// Start and end squares include the one X at the ends of the anchored blobs.
+	// In this case, first and last clue indices are for the anchored sequence.
+	private void ProcessBlobsToLeftAndRightOfAnchoredBlobSequence (PuzzleSquare[] squares,
+			Clues2 myClues, int first_clue_idx, int last_clue_idx, 
+			int start_square, int end_square, int guess_level)
+	{
+			
+		// Also process any blobs that are on the left edge of the UNKNOWN space
+		if (first_clue_idx > 0)
+		{
+			// get previous clue value
+			int prev_clue_value = myClues.clue_list[first_clue_idx-1+1].value;
+			
+			// maximum # of UNKNOWNS before our first FILLED allowed
+			int max_unknowns = prev_clue_value - 1;
+			
+			// find location of first FILLED square to the left (if any)
+			// also keep track of left-most EMPTY square before we get to the FILLED square (if any)
+			int first_filled = -1;
+			if (start_square > 0)
+			{
+				for (int isq=start_square-1; isq>=0; isq--)
+				{
+					if (squares[isq].IsFilled()) 
+					{
+						first_filled = isq;
+						break;
+					}
+				}
+			}
+			
+			// if we have a FILLED square, then let's see if it's close enough to the start
+			// of our sequence to be assigned to the previous clue
+			if (first_filled >= 0)
+			{
+				// find contiguous UNKNOWNS (no EMPTYs) between this filled spot
+				// and the start of our sequence
+				int start_unknowns = -1;
+				int end_unknowns = -1;
+				int num_unknowns = 0;
+				for (int isq=first_filled+1; isq<start_square; isq++)
+					if (squares[isq].IsUnknown())
+					{
+						if (start_unknowns<0) start_unknowns = isq;
+						end_unknowns = isq;
+						num_unknowns++;
+					}
+				boolean empties = false;
+				if (start_unknowns >= 0 && end_unknowns >= 0)
+					for (int isq=start_unknowns+1; isq<end_unknowns; isq++)
+						if (squares[isq].IsEmpty()) empties = true;
+				
+				// if no empties and # of unknowns is small enough, then
+				// we can process this blob for the previous clue!
+				if (!empties && num_unknowns <= max_unknowns)
+				{
+					int num_filled = prev_clue_value - num_unknowns;
+					for (int i=0; i<num_filled; i++)
+					{
+						if (squares[first_filled-i].IsUnknown())
+							squares[first_filled-i].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level);
+					}
+					// EMPTY that last square if the num_filled is the same as the clue value
+					if (num_unknowns == 0 && (first_filled-prev_clue_value >= 0))
+						if (!squares[first_filled-prev_clue_value].IsEmpty())
+							squares[first_filled-prev_clue_value].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
+				}
+			}
+		}
+
+		// Also process any blobs that are on the right edge of the UNKNOWN space
+		int num_clues = myClues.clue_list.length-2;
+		if (last_clue_idx < (num_clues-1))
+		{
+			// get next clue value
+			int next_clue_value = myClues.clue_list[last_clue_idx+1+1].value;
+			
+			// maximum # of UNKNOWNS before our first FILLED allowed
+			int max_unknowns = next_clue_value - 1;			
+			
+			// find location of first FILLED square to the right (if any)
+			// also keep track of right-most EMPTY square before we get to the FILLED square (if any)
+			int first_filled = -1;
+			if (end_square < squares.length-1)
+			{
+				for (int isq=end_square+1; isq<squares.length; isq++)
+				{
+					if (squares[isq].IsFilled()) 
+					{
+						first_filled = isq;
+						break;
+					}				
+				}
+			}
+			
+			// if we have a FILLED square, then let's see if it's close enough to the end
+			// of our sequence to be assigned to the next clue
+			if (first_filled >= 0)
+			{
+				// find contiguous UNKNOWNS (no EMPTYs) between this filled spot
+				// and the start of our sequence
+				int start_unknowns = -1;
+				int end_unknowns = -1;
+				int num_unknowns = 0;
+				for (int isq=end_square+1; isq<first_filled; isq++)
+					if (squares[isq].IsUnknown())
+					{
+						if (start_unknowns<0) start_unknowns = isq;
+						end_unknowns = isq;
+						num_unknowns++;
+					}
+				boolean empties = false;
+				if (start_unknowns >= 0 && end_unknowns >= 0)
+					for (int isq=start_unknowns+1; isq<end_unknowns; isq++)
+						if (squares[isq].IsEmpty()) empties = true;
+				
+				// if no empties and # of unknowns is small enough, then
+				// we can process this blob for the previous clue!
+				if (!empties && num_unknowns <= max_unknowns)
+				{
+					int num_filled = next_clue_value - num_unknowns;
+					for (int i=0; i<num_filled; i++)
+					{
+						if (squares[first_filled+i].IsUnknown())
+							squares[first_filled+i].SetStatus(PuzzleSquare.SquareStatus.FILLED, guess_level);
+					}
+					// EMPTY that last square if the num_filled is the same as the clue value
+					if (num_unknowns == 0 && (first_filled+next_clue_value<squares.length))
+						if (!squares[first_filled+next_clue_value].IsEmpty())
+							squares[first_filled+next_clue_value].SetStatus(PuzzleSquare.SquareStatus.EMPTY, guess_level);
+				}
+			}
+		}		
 	}
 	
 	private boolean BlobAndAntiBlobAreAdjacent (Blob b, AntiBlob ab)
@@ -2601,6 +3164,70 @@ public class BetterPuzzleSolver {
 	// Utility functions to process a line
 	// -----------------------------------
 	
+	public static String DumpSquaresWithBlobSequences (PuzzleSquare[] sqs, ArrayList<ArrayList<Blob>> sequences)
+	{
+		if (sqs == null) return "";
+		String msg1 = DumpSquares (sqs);
+		
+		String msg2 = "";
+		if (sequences.isEmpty())
+			msg2 = "No anchored blob sequences\n";
+		else
+		{
+			for (ArrayList<Blob> blob_seq : sequences)
+			{
+				msg2 += "[ ";
+				boolean first = true;
+				for (Blob b : blob_seq)
+				{
+					if (!first) msg2 += ", ";
+					msg2 += Integer.toString(b.GetLength());
+					first = false;
+				}
+				msg2 += " ] ";
+			}
+			msg2 += "\n";
+		}
+		
+		return msg1 + msg2;
+	}
+	
+	public static String DumpSquaresWithBlobSequencesAndClueMatches (PuzzleSquare[] sqs, 
+			ArrayList<ArrayList<Blob>> sequences, Clues2 myClues, int[] seq_starts)
+	{
+		if (sqs == null) return "";
+		String msg1 = DumpSquaresWithBlobSequences (sqs, sequences);
+		
+		String msg2 = DumpClues2OneLine (myClues);
+		
+		String msg3 = "Unique matching clue indices: [";
+		boolean first = true;
+		for (int n=0; n<seq_starts.length; n++)
+		{
+			if (!first) msg3 += ",";
+			if (seq_starts[n] < 0)
+				msg3 += " [ none ]";
+			else
+			{
+				String msg4 = " [";
+				ArrayList<Blob> seq = sequences.get(n);
+				boolean first2 = true;
+				for (int i=0; i<seq.size(); i++)
+				{
+					if (!first2) msg4 += ",";
+					msg4 += " " + (seq_starts[n]+i);
+					first2 = false;
+				}
+				msg4 += " ]";
+				msg3 += msg4;
+			}
+			first = false;
+		}
+		msg3 += "]\n";
+		
+		return msg1 + msg2 + msg3;
+	}
+	
 	public static String DumpSquaresWithClues (PuzzleSquare[] sqs, Clues2 clues2)
 	{
 		if (sqs == null) return "";
@@ -2709,6 +3336,19 @@ public class BetterPuzzleSolver {
 		}
 		return msg;				
 	}
+	public static String DumpClues2OneLine (Clues2 myClues)
+	{
+		if (myClues == null) return "";
+		String msg = "";
+		for (int i=0; i<myClues.clue_list.length; i++)
+		{
+			Clue2 clue = myClues.clue_list[i];	
+			if (clue.value > 0)
+				msg += " " + clue.value;
+		}
+		msg += "\n";
+		return msg;
+	}	
 	public static String DumpClues (Clues myClues)
 	{
 		if (myClues == null) return "";
@@ -3036,7 +3676,7 @@ public class BetterPuzzleSolver {
 	// -----------------------------------------------------------------------------------
 	
 	// This is the most pitiful thing I could think of to get the solution returned by Better_
-	public PuzzleSquare[] PossibleSolutionThatFits (PBNPuzzle myPuzzle, boolean is_row, int row_or_col)
+	public PuzzleSquare[] PossibleSolutionThatFits (PBNPuzzle myPuzzle, boolean is_row, int row_or_col, boolean do_debug)
 	{
 		int N = is_row ? myPuzzle.GetCols() : myPuzzle.GetRows();
 		PuzzleSquare[] temp_sqs = new PuzzleSquare[N];
@@ -3046,10 +3686,6 @@ public class BetterPuzzleSolver {
 			else        temp_sqs[i] = new PuzzleSquare(myPuzzle.GetBackupPuzzleSquareAt(i, row_or_col));
 			temp_sqs[i].SetNotAGuess();
 		}
-		
-		int debug_row = -1;
-		int debug_row2 = -1;
-		boolean do_debug = (is_row && (row_or_col == debug_row || row_or_col == debug_row2));
 		
 		// set the initial guess level
 		int guess_level = 1;
@@ -3566,9 +4202,9 @@ public class BetterPuzzleSolver {
 		return null;		
 	}
 	
-	public boolean CanSolutionFit (PBNPuzzle myPuzzle, boolean is_row, int row_or_col) 
+	public boolean CanSolutionFit (PBNPuzzle myPuzzle, boolean is_row, int row_or_col, boolean do_debug) 
 	{
-		PuzzleSquare[] possible_sqs = PossibleSolutionThatFits (myPuzzle, is_row, row_or_col);
+		PuzzleSquare[] possible_sqs = PossibleSolutionThatFits (myPuzzle, is_row, row_or_col, do_debug);
 		if (possible_sqs == null) return false;
 		// let's double-check this possible solution
 		boolean does_work = DoubleCheckSolution (myPuzzle, possible_sqs, is_row, row_or_col);

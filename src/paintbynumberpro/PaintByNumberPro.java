@@ -40,6 +40,12 @@ public class PaintByNumberPro {
     // Some quantities used by PBNDrawPanel
     private static int viewport_width;
 	private static int viewport_height;
+	
+	// Just a static counter to keep track of where I'm at in the auto-solver
+	public static int autosolver_counter = 0;
+	public static int autosolver_flag = 178;
+	public static int autosolver_col = 56;
+	public static int autosolver_row = -1;
 
     /**
      * @param args the command line arguments

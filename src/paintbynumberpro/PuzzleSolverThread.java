@@ -63,6 +63,9 @@ public class PuzzleSolverThread extends Thread {
 
         boolean no_change = false;
         boolean success = true;
+		
+		System.out.println ("Calling IterateOnceUntilErrorOrNochange (" + 
+				(++PaintByNumberPro.autosolver_counter) + ")...");
 
         while (success && !no_change && !do_stop)
         {
@@ -78,7 +81,8 @@ public class PuzzleSolverThread extends Thread {
             boolean keep_edge_processing = true;
             while (keep_edge_processing && !do_stop)
             {
-//				System.out.println ("ProcessEdges...");
+				System.out.println ("  ProcessEdges (" + (++PaintByNumberPro.autosolver_counter) +
+						")...");
                 int prev_num_knowns = puzzleToSolve.CountKnownSquares();
                 success = PuzzleSolver.ProcessEdges (puzzleToSolve, guess_level, false);
                 int num_knowns = puzzleToSolve.CountKnownSquares();
@@ -87,6 +91,7 @@ public class PuzzleSolverThread extends Thread {
 				{
 //					System.out.println ("CheckPuzzleSoFar...");
                     success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false, false);
+					if (!success) System.out.println ("   failed after edge processing");
 				}
 
                 keep_edge_processing = success && (prev_num_knowns != num_knowns);
@@ -96,7 +101,8 @@ public class PuzzleSolverThread extends Thread {
 			boolean keep_processing = true;
 			while (keep_processing && !do_stop)
 			{
-//				System.out.println ("Process with smarter solver...");
+				System.out.println ("  Process with smarter solver (" +
+						(++PaintByNumberPro.autosolver_counter) + ")...");
                 int prev_num_knowns = puzzleToSolve.CountKnownSquares();
                 success = solver.ProcessPuzzle(puzzleToSolve, guess_level, debug);
                 int num_knowns = puzzleToSolve.CountKnownSquares();
@@ -105,6 +111,7 @@ public class PuzzleSolverThread extends Thread {
 				{
 //					System.out.println ("CheckPuzzleSoFar...");
                     success = PuzzleSolver.CheckPuzzleSoFar (puzzleToSolve, true, false, false);
+					if (!success) System.out.println ("   failed after smart solver");					
 				}
 
                 keep_processing = success && (prev_num_knowns != num_knowns);
@@ -148,6 +155,7 @@ public class PuzzleSolverThread extends Thread {
         // Get the largest guess level with at least one square
         int guess_level = puzzleToSolve.GetMaxGuessLevelWithKnownSquares ();
         puzzleToSolve.SetGuessLevel(guess_level);
+		System.out.println ("Starting guess level: " + guess_level);
 
         // Fill in the obvious stuff
         if (puzzleToSolve.CountKnownSquares() == 0)

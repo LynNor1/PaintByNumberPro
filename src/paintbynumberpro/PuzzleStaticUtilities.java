@@ -721,12 +721,12 @@ public class PuzzleStaticUtilities {
         return newPuzzle;
     }
 
-    private static class MyFileFilter extends javax.swing.filechooser.FileFilter
+    public static class MyFileFilter extends javax.swing.filechooser.FileFilter
     {
         private ArrayList mySuffixes = null;
         private ArrayList myRejectedSuffixes = null;
 
-        private MyFileFilter ()
+        public MyFileFilter ()
         {  super(); }
 
         public void addAcceptableSuffixes (ArrayList theSuffixes)

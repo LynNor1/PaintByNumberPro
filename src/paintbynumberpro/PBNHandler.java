@@ -1319,12 +1319,12 @@ public class PBNHandler implements Printable {
 		if (col_clue_rect.contains(pt))
 		{
             int col = this.GetNearestColSelectedAtPoint(pt);
-            success = bps.CanSolutionFit(myPuzzle, false, col);
+            success = bps.CanSolutionFit(myPuzzle, false, col, false);
 //            PuzzleStaticUtilities.DumpOneColumn(myPuzzle, col);
         } else if (row_clue_rect.contains (pt))
         {
             int row = this.GetNearestRowSelectedAtPoint(pt);
-            success = bps.CanSolutionFit(myPuzzle, true, row);
+            success = bps.CanSolutionFit(myPuzzle, true, row, false);
 //            PuzzleStaticUtilities.DumpOneRow (myPuzzle, row);
         }
         if (success)

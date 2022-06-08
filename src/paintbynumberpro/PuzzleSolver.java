@@ -212,11 +212,17 @@ public class PuzzleSolver extends Thread {
         last_msg = UNKNOWN_ERROR;
 		
 		BetterPuzzleSolver bps = new BetterPuzzleSolver(theThread);
-
+		
         // Check rows first
         for (int r=0; r<myPuzzle.GetRows(); r++)
         {
-			if (!bps.CanSolutionFit (myPuzzle, true, r))
+			do_debug = do_debug || (PaintByNumberPro.autosolver_counter == PaintByNumberPro.autosolver_flag &&
+					r == PaintByNumberPro.autosolver_row);			
+			if (do_debug) 
+			{
+				System.out.println ("CheckPuzzleSoFar row " + r);
+			}
+			if (!bps.CanSolutionFit (myPuzzle, true, r, do_debug))
             {
                 if (!for_solver && last_msg != null)
                     PaintByNumberPro.HandleErrorMessage (title, "Error in row " + r);
@@ -228,7 +234,14 @@ public class PuzzleSolver extends Thread {
 
         // Check cols next
         for (int c=0; c<myPuzzle.GetCols(); c++)
-			if (!bps.CanSolutionFit (myPuzzle, false, c))
+		{
+			do_debug = do_debug || (PaintByNumberPro.autosolver_counter == PaintByNumberPro.autosolver_flag &&
+					c == PaintByNumberPro.autosolver_col);			
+			if (do_debug) 
+			{
+				System.out.println ("CheckPuzzleSoFar col " + c);
+			}			
+			if (!bps.CanSolutionFit (myPuzzle, false, c, do_debug))
             {
                 if (!for_solver && last_msg != null)
                     PaintByNumberPro.HandleErrorMessage (title, "Error in col " + c);
@@ -236,6 +249,7 @@ public class PuzzleSolver extends Thread {
 					System.out.println ("Error in col " + c);
                 return false;
             }
+		}
 
         if (!for_solver && !suppress_success_dialog)
             PaintByNumberPro.HandleMessage ("Check Puzzle",
@@ -1722,13 +1736,75 @@ public class PuzzleSolver extends Thread {
 
     public static Point GenerateNewGuess (PBNPuzzle myPuzzle)
     {
+		System.out.println ("Generating a new guess");
         if (!guess_vars_initialized) InitializeGuessVariables (myPuzzle);
 		return GenerateGuessFromRowOrColWithFewestUnknowns (myPuzzle);
 //        return GenerateGuessFromEdgeWithMostClueSquares (myPuzzle);
     }
 	
+	private static void BubbleSortByUnknowns (ArrayList<UnknownsByRowCol> arr)
+	{
+		int n = arr.size();
+		for (int i = 0; i < n-1; i++)
+			for (int j = 0; j < n-i-1; j++)
+				if (arr.get(j).num_unknowns < arr.get(j+1).num_unknowns)
+				{
+					// swap temp and arr[i]
+					UnknownsByRowCol temp = arr.get(j);
+					arr.set(j  , arr.get(j+1));
+					arr.set(j+1, temp);
+				}	
+	}
+	
+	private static class UnknownsByRowCol
+	{
+		public int num_unknowns;
+		public int row;
+		public int col;
+		UnknownsByRowCol (int num, int r, int c)
+		{
+			num_unknowns = num;
+			row = r;
+			col = c;
+		}
+		UnknownsByRowCol (UnknownsByRowCol orig)
+		{
+			num_unknowns = orig.num_unknowns;
+			row = orig.row;
+			col = orig.col;
+		}
+		public boolean IsRow ()
+		{ return row >= 0; }
+		public int GetRowOrCol ()
+		{
+			if (col < 0) return row;
+			else return col;
+		}
+	}
+	
 	private static Point GenerateGuessFromRowOrColWithFewestUnknowns (PBNPuzzle myPuzzle)
 	{
+		/*
+		// calculate # of unknowns for each row and column
+		ArrayList<UnknownsByRowCol> myList = new ArrayList();
+		
+		for (int irow=0; irow<myPuzzle.GetRows(); irow++)
+		{
+			int num_unknowns = myPuzzle.CountUnknownSquaresInRow(irow);
+			if (num_unknowns > 0)
+				myList.add(new UnknownsByRowCol (num_unknowns, irow, -1));
+		}				
+		for (int icol=0; icol<myPuzzle.GetCols(); icol++)
+		{
+			int num_unknowns = myPuzzle.CountUnknownSquaresInCol(icol);
+			if (num_unknowns > 0)
+				myList.add(new UnknownsByRowCol (num_unknowns, -1, icol));
+		}
+		
+		// sort list from smallest Unknowns to largest
+		BubbleSortByUnknowns (myList);
+		*/
+		
 		int least_unknowns = myPuzzle.GetCols();
 		if (myPuzzle.GetRows() > least_unknowns) least_unknowns = myPuzzle.GetRows();
 		
@@ -1755,7 +1831,116 @@ public class PuzzleSolver extends Thread {
 			}
 		}
 		
-		// now grab the first unknown square in our designated row or column
+		// start with the 1st UnknownsByRowCol
+//		int idx = 0;
+		
+		// loop until we find our next guess
+//		while (idx < myList.size())
+//		{
+//			UnknownsByRowCol unknowns = myList.get(idx);
+//			boolean is_row = unknowns.IsRow();
+//			int num = unknowns.GetRowOrCol();
+
+			// try and grab an unknown square next to a filled square in our
+			// designated row or column or adjacent row or column
+			if (is_row)
+			{
+				int cur_row = num;
+				int prev_row = num-1;
+				int next_row = num+1;
+				for (int col=0; col<myPuzzle.GetCols(); col++)
+				{
+					int prev_col = col-1;
+					int next_col = col+1;
+					if (myPuzzle.GetPuzzleSquareAt(cur_row, col).IsUnknown())
+					{
+						if (prev_col >= 0 && myPuzzle.GetPuzzleSquareAt(cur_row, prev_col).IsFilled())
+							return (new Point (col, cur_row));
+						if (next_col < myPuzzle.GetCols() && myPuzzle.GetPuzzleSquareAt(cur_row, next_col).IsFilled())
+							return (new Point (col, cur_row));
+						if (prev_row >= 0 && myPuzzle.GetPuzzleSquareAt(prev_row, col).IsFilled())
+							return (new Point (col, cur_row));
+						if (next_row < myPuzzle.GetRows() && myPuzzle.GetPuzzleSquareAt(next_row, col).IsFilled())
+							return (new Point (col, cur_row));
+					}
+				}
+			} else
+			{
+				int cur_col = num;
+				int prev_col = num-1;
+				int next_col = num+1;
+				for (int row=0; row<myPuzzle.GetRows(); row++)
+				{
+					int prev_row = row-1;
+					int next_row = row+1;
+					if (myPuzzle.GetPuzzleSquareAt(row, cur_col).IsUnknown())
+					{
+						if (prev_row >= 0 && myPuzzle.GetPuzzleSquareAt(prev_row, cur_col).IsFilled())
+							return (new Point (cur_col, row));
+						if (next_row < myPuzzle.GetRows() && myPuzzle.GetPuzzleSquareAt(next_row, cur_col).IsFilled())
+							return (new Point (cur_col, row));
+						if (prev_col >= 0 && myPuzzle.GetPuzzleSquareAt(row, prev_col).IsFilled())
+							return (new Point (cur_col, row));
+						if (next_col < myPuzzle.GetCols() && myPuzzle.GetPuzzleSquareAt(row, next_col).IsFilled())
+							return (new Point (cur_col, row));
+					}
+				}
+			}
+			
+			// if we're here, then let's look at the next row or col
+//			idx++;
+//		}
+		
+/*
+		// if we're here, then find the first UNKNOWN square next to a FILLED square
+		for (int irow=0; irow<myPuzzle.GetRows(); irow++)
+		{
+			int prev_row = irow-1;
+			int next_row = irow+1;
+			int num_unknowns = myPuzzle.CountUnknownSquaresInRow(irow);
+			if (num_unknowns > 0)
+			{
+				for (int icol=0; icol<myPuzzle.GetCols(); icol++)
+				{
+					int prev_col = icol-1;
+					int next_col = icol+1;
+					num_unknowns = myPuzzle.CountUnknownSquaresInCol(icol);
+					if (num_unknowns > 0)
+					{
+						if (myPuzzle.GetPuzzleSquareAt(irow, icol).IsUnknown())
+						{
+							if (prev_row >= 0)
+							{
+								if (myPuzzle.GetPuzzleSquareAt(prev_row, icol).IsFilled())
+									return new Point (icol, irow);
+							}
+							if (next_row < myPuzzle.GetRows())
+							{
+								if (myPuzzle.GetPuzzleSquareAt(next_row, icol).IsFilled())
+									return new Point (icol, irow);
+							}
+							if (prev_col >= 0)
+							{
+								if (myPuzzle.GetPuzzleSquareAt(irow, prev_col).IsFilled())
+									return new Point (icol, irow);
+							}
+							if (next_col < myPuzzle.GetCols())
+							{
+								if (myPuzzle.GetPuzzleSquareAt(irow, next_col).IsFilled())
+									return new Point (icol, irow);
+							}
+						}
+					}
+				}
+			}
+		}
+*/
+
+//		UnknownsByRowCol unknowns = myList.get(0);
+//		boolean is_row = unknowns.IsRow();
+//		int num = unknowns.GetRowOrCol();
+
+		// if we're here, grab the first unknown square in our designated row or column
 		if (is_row)
 		{
 			int col = 0;
@@ -1769,7 +1954,7 @@ public class PuzzleSolver extends Thread {
 			assert (row < myPuzzle.GetRows());
 			return (new Point (num, row));
 		}
-	}
+}
 
     private static Point GenerateSpiralGuess (PBNPuzzle myPuzzle)
     {

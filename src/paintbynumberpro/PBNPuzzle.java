@@ -74,13 +74,13 @@ public class PBNPuzzle {
     private int clue_width = DEFAULT_CLUE_WIDTH, clue_height = DEFAULT_CLUE_HEIGHT;
     private int font_size = DEFAULT_FONT_SIZE;
 
-    PBNPuzzle ()
+    public PBNPuzzle ()
     {
         isReady = false;
     }
 
     // This is a cloning constructor
-    PBNPuzzle (PBNPuzzle aPuzzle)
+    public PBNPuzzle (PBNPuzzle aPuzzle)
     {
         this ();
         if (aPuzzle == null) return;
@@ -1112,6 +1112,8 @@ public class PBNPuzzle {
 	{
         int level = GetMaxGuessLevel();
 		if (level < 0) return;
+		
+		System.out.println ("Undo guess at level " + level);
 
         // look for the special-marked square at this guess level
         // and hang on to its value
