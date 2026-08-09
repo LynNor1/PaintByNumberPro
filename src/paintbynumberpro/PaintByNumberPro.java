@@ -70,6 +70,13 @@ public class PaintByNumberPro {
         // Open the main JFrame
         openingFrame = new OpeningJFrame (versionStr);
         WindowUtilities.CenterFrame (openingFrame);
+        // Some window managers (e.g. GNOME/Wayland) report zero insets for
+        // this window even though they draw a title bar over it, so pack()
+        // can undersize it. Pad it a bit and re-center so nothing is
+        // clipped; the frame is resizable as a further fallback.
+        Dimension packedSize = openingFrame.getSize();
+        openingFrame.setSize(packedSize.width, packedSize.height + 40);
+        openingFrame.setLocationRelativeTo(null);
         openingFrame.setVisible(true);
         openingFrame.toFront();
 
